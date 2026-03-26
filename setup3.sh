@@ -1,3 +1,10 @@
+#!/bin/bash
+# setup3.sh - Composants par offre + références produit
+# Lance depuis la racine du projet : bash setup3.sh
+
+echo "📦 Mise à jour avec composants et références..."
+
+cat > app/dashboard/DashboardClient.tsx << 'ENDOFFILE'
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -803,3 +810,13 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
     </div>
   )
 }
+ENDOFFILE
+
+echo "✅ DashboardClient mis à jour !"
+echo ""
+echo "⚠️  N'oublie pas de passer le SQL dans Supabase d'abord !"
+echo ""
+echo "Ensuite lance :"
+echo "  git add ."
+echo "  git commit -m 'feat: composants + références produit par offre'"
+echo "  git push"
