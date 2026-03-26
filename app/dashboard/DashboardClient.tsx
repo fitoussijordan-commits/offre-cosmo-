@@ -5,7 +5,6 @@ import { createClient } from '@/lib/supabase'
 import { Offre, Profile } from '@/lib/types'
 
 const MONTHS = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc']
-
 const DEPT_COLORS: Record<string, { bg: string; text: string }> = {
   Achat:      { bg: '#FFF3E0', text: '#E65100' },
   Marketing:  { bg: '#F3E5F5', text: '#6A1B9A' },
@@ -13,13 +12,13 @@ const DEPT_COLORS: Record<string, { bg: string; text: string }> = {
   ESAT:       { bg: '#E8F5E9', text: '#1B5E20' },
   Admin:      { bg: '#F5F5F5', text: '#333' },
 }
-
 const STATUS_CONFIG: Record<string, { color: string; bg: string }> = {
   'À faire':  { color: '#94A3B8', bg: '#F1F5F9' },
   'En cours': { color: '#F59E0B', bg: '#FFFBEB' },
   'Fait':     { color: '#10B981', bg: '#ECFDF5' },
   'Bloqué':   { color: '#EF4444', bg: '#FEF2F2' },
 }
+const COLORS = ['#FF6B9D','#FFB347','#C0392B','#3498DB','#2ECC71','#9B59B6','#1ABC9C','#E67E22']
 
 export default function DashboardClient({ profile, offres: initialOffres }: { profile: Profile, offres: Offre[] }) {
   const [offres, setOffres] = useState<Offre[]>(initialOffres)
@@ -28,6 +27,9 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
   const [editingNote, setEditingNote] = useState<string | null>(null)
   const [showNewTask, setShowNewTask] = useState(false)
   const [newTask, setNewTask] = useState({ label: '', dept: 'Achat', deadline: '' })
+  const [showNewOffre, setShowNewOffre] = useState(false)
+  const [newOffre, setNewOffre] = useState({ name: '', color: '#FF6B9D', start_date: '', end_date: '', priority: 'Basse' })
+  const [creating, setCreating] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -36,6 +38,48 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
   const getProgress = (offre: Offre) => {
     if (!offre.tasks?.length) return 0
     return Math.round((offre.tasks.filter(t => t.status === 'Fait').length / offre.tasks.length) * 100)
+  }
+
+  const createOffre = async () => {
+    if (!newOffre.name || !newOffre.start_date || !newOffre.end_date) return
+    setCreating(true)
+
+    const { data: offreData, error } = await supabase
+      .from('offres')
+      .insert({
+        name: newOffre.name,
+        color: newOffre.color,
+        start_date: newOffre.start_date,
+        end_date: newOffre.end_date,
+        priority: newOffre.priority,
+        status: 'En prépa',
+        created_by: profile.id,
+      })
+      .select()
+      .single()
+
+    if (error || !offreData) { setCreating(false); return }
+
+    const { data: templates } = await supabase.from('task_templates').select('*').order('order_index')
+    if (templates?.length) {
+      const tasks = templates.map(t => ({
+        offre_id: offreData.id,
+        label: t.label,
+        department: t.department,
+        deadline: new Date(new Date(newOffre.start_date).getTime() + t.delay_days * 86400000).toISOString().split('T')[0],
+        status: 'À faire',
+        order_index: t.order_index,
+        is_custom: false,
+      }))
+      const { data: tasksData } = await supabase.from('tasks').insert(tasks).select()
+      offreData.tasks = tasksData || []
+    }
+
+    setOffres(prev => [...prev, offreData])
+    setSelectedId(offreData.id)
+    setNewOffre({ name: '', color: '#FF6B9D', start_date: '', end_date: '', priority: 'Basse' })
+    setShowNewOffre(false)
+    setCreating(false)
   }
 
   const updateTaskStatus = async (taskId: string, status: string) => {
@@ -76,10 +120,7 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
       status: 'À faire',
     }).select().single()
     if (data) {
-      setOffres(prev => prev.map(o => o.id === selectedId
-        ? { ...o, tasks: [...(o.tasks || []), data] }
-        : o
-      ))
+      setOffres(prev => prev.map(o => o.id === selectedId ? { ...o, tasks: [...(o.tasks || []), data] } : o))
       setNewTask({ label: '', dept: 'Achat', deadline: '' })
       setShowNewTask(false)
     }
@@ -90,12 +131,66 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
     router.push('/login')
   }
 
-  const filteredTasks = offre?.tasks?.filter(t =>
-    filterDept === 'Tous' || t.department === filterDept
-  ) || []
+  const filteredTasks = offre?.tasks?.filter(t => filterDept === 'Tous' || t.department === filterDept) || []
 
   return (
     <div style={{ fontFamily: 'system-ui, sans-serif', background: '#F8F7F4', minHeight: '100vh', color: '#1C1B18' }}>
+
+      {/* MODAL NOUVELLE OFFRE */}
+      {showNewOffre && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#FFF', borderRadius: 16, padding: 32, width: 440, boxShadow: '0 8px 40px rgba(0,0,0,0.15)' }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 24, margin: '0 0 24px' }}>Nouvelle offre</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ fontSize: 12, color: '#888', fontWeight: 600, display: 'block', marginBottom: 6 }}>NOM DE L'OFFRE</label>
+                <input value={newOffre.name} onChange={e => setNewOffre(p => ({ ...p, name: e.target.value }))}
+                  placeholder="Ex: Crème Visage Printemps"
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 14, boxSizing: 'border-box' }} />
+              </div>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 12, color: '#888', fontWeight: 600, display: 'block', marginBottom: 6 }}>DATE DÉBUT</label>
+                  <input type="date" value={newOffre.start_date} onChange={e => setNewOffre(p => ({ ...p, start_date: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 14, boxSizing: 'border-box' }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 12, color: '#888', fontWeight: 600, display: 'block', marginBottom: 6 }}>DATE FIN</label>
+                  <input type="date" value={newOffre.end_date} onChange={e => setNewOffre(p => ({ ...p, end_date: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 14, boxSizing: 'border-box' }} />
+                </div>
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: '#888', fontWeight: 600, display: 'block', marginBottom: 6 }}>PRIORITÉ</label>
+                <select value={newOffre.priority} onChange={e => setNewOffre(p => ({ ...p, priority: e.target.value }))}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 14 }}>
+                  <option>Basse</option>
+                  <option>Haute</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: '#888', fontWeight: 600, display: 'block', marginBottom: 8 }}>COULEUR</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {COLORS.map(c => (
+                    <div key={c} onClick={() => setNewOffre(p => ({ ...p, color: c }))}
+                      style={{ width: 28, height: 28, borderRadius: '50%', background: c, cursor: 'pointer', border: newOffre.color === c ? '3px solid #1C1B18' : '3px solid transparent' }} />
+                  ))}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+                <button onClick={() => setShowNewOffre(false)}
+                  style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E8E4DC', background: 'transparent', fontSize: 14, cursor: 'pointer', color: '#666' }}>
+                  Annuler
+                </button>
+                <button onClick={createOffre} disabled={creating}
+                  style={{ flex: 2, padding: '10px', borderRadius: 8, background: '#1C1B18', color: '#FFF', border: 'none', fontSize: 14, fontWeight: 600, cursor: creating ? 'not-allowed' : 'pointer', opacity: creating ? 0.7 : 1 }}>
+                  {creating ? 'Création...' : 'Créer l\'offre'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* HEADER */}
       <div style={{ background: '#1C1B18', color: '#F8F7F4', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 52 }}>
@@ -108,9 +203,7 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
           <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: DEPT_COLORS[profile?.department]?.bg, color: DEPT_COLORS[profile?.department]?.text, fontWeight: 600 }}>
             {profile?.department}
           </span>
-          <button onClick={handleLogout} style={{ fontSize: 12, color: '#888', background: 'none', border: 'none', cursor: 'pointer' }}>
-            Déconnexion
-          </button>
+          <button onClick={handleLogout} style={{ fontSize: 12, color: '#888', background: 'none', border: 'none', cursor: 'pointer' }}>Déconnexion</button>
         </div>
       </div>
 
@@ -118,14 +211,10 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
 
         {/* LEFT PANEL */}
         <div style={{ width: 320, borderRight: '1px solid #E8E4DC', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#F8F7F4' }}>
-
-          {/* Timeline */}
           <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid #E8E4DC' }}>
             <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', color: '#888', textTransform: 'uppercase', marginBottom: 10 }}>Planning 2026</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 1, marginBottom: 4 }}>
-              {MONTHS.map((m, i) => (
-                <div key={i} style={{ fontSize: 8, color: '#AAA', textAlign: 'center' }}>{m}</div>
-              ))}
+              {MONTHS.map((m, i) => <div key={i} style={{ fontSize: 8, color: '#AAA', textAlign: 'center' }}>{m}</div>)}
             </div>
             {offres.map(o => {
               const startMonth = new Date(o.start_date).getMonth()
@@ -145,7 +234,6 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
             })}
           </div>
 
-          {/* Liste offres */}
           <div style={{ flex: 1, overflowY: 'auto', padding: 12 }}>
             {offres.map(o => {
               const progress = getProgress(o)
@@ -176,14 +264,21 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
                 </div>
               )
             })}
+
+            {profile?.department === 'Admin' && (
+              <button onClick={() => setShowNewOffre(true)} style={{
+                width: '100%', padding: '10px', border: '1.5px dashed #D4D0C8', borderRadius: 10,
+                background: 'transparent', cursor: 'pointer', fontSize: 12, color: '#888',
+              }}>
+                + Nouvelle offre
+              </button>
+            )}
           </div>
         </div>
 
         {/* RIGHT PANEL */}
         {offre ? (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-
-            {/* Offre header */}
             <div style={{ padding: '20px 28px 16px', borderBottom: '1px solid #E8E4DC', background: '#FFF' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                 <div style={{ width: 10, height: 10, borderRadius: '50%', background: offre.color }} />
@@ -212,7 +307,6 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
               </div>
             </div>
 
-            {/* Filtres */}
             <div style={{ padding: '12px 28px', borderBottom: '1px solid #E8E4DC', background: '#FFF', display: 'flex', gap: 6, alignItems: 'center' }}>
               {['Tous', 'Achat', 'Marketing', 'Logistique', 'ESAT'].map(d => (
                 <button key={d} onClick={() => setFilterDept(d)} style={{
@@ -235,9 +329,7 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
               )}
             </div>
 
-            {/* Tasks */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '8px 28px 24px' }}>
-
               {showNewTask && (
                 <div style={{ background: '#FFF', border: '1px solid #E8E4DC', borderRadius: 10, padding: 14, margin: '10px 0', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                   <input value={newTask.label} onChange={e => setNewTask(p => ({ ...p, label: e.target.value }))}
@@ -250,9 +342,7 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
                   <input value={newTask.deadline} onChange={e => setNewTask(p => ({ ...p, deadline: e.target.value }))}
                     type="date"
                     style={{ padding: '7px 10px', borderRadius: 7, border: '1px solid #E8E4DC', fontSize: 13 }} />
-                  <button onClick={addTask} style={{ padding: '7px 14px', borderRadius: 7, background: '#1C1B18', color: '#FFF', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                    Ajouter
-                  </button>
+                  <button onClick={addTask} style={{ padding: '7px 14px', borderRadius: 7, background: '#1C1B18', color: '#FFF', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Ajouter</button>
                   <button onClick={() => setShowNewTask(false)} style={{ padding: '7px', borderRadius: 7, background: 'transparent', border: '1px solid #E8E4DC', fontSize: 13, cursor: 'pointer', color: '#888' }}>✕</button>
                 </div>
               )}
@@ -300,9 +390,7 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
                           {['À faire', 'En cours', 'Fait', 'Bloqué'].map(s => <option key={s}>{s}</option>)}
                         </select>
                       ) : (
-                        <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 7px', borderRadius: 6, background: sc.bg, color: sc.color }}>
-                          {task.status}
-                        </span>
+                        <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 7px', borderRadius: 6, background: sc.bg, color: sc.color }}>{task.status}</span>
                       )}
                     </div>
                     <div>
