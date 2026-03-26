@@ -649,14 +649,14 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
                     )}
                   </div>
 
-                  {activeComp.refs.length === 0 && !showNewRef ? (
+                  {(activeComp.refs || []).length === 0 && !showNewRef ? (
                     <div style={{ fontSize: 12, color: '#CCC', padding: '8px 0' }}>Aucune référence</div>
                   ) : (
                     <div style={{ background: '#FFF', borderRadius: 10, border: '1px solid #E8E4DC', overflow: 'hidden' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 80px 32px', padding: '7px 14px', fontSize: 10, color: '#AAA', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #F0EDE6' }}>
                         <div>Référence</div><div>Désignation</div><div>Qté</div><div/>
                       </div>
-                      {activeComp.refs.map(ref => (
+                      {(activeComp.refs || []).map(ref => (
                         <div key={ref.id} style={{ display: 'grid', gridTemplateColumns: '120px 1fr 80px 32px', padding: '8px 14px', alignItems: 'center', borderBottom: '1px solid #F8F7F4' }}>
                           <div style={{ fontSize: 12, fontWeight: 600, color: '#1C1B18', fontFamily: 'monospace' }}>{ref.reference}</div>
                           <div style={{ fontSize: 12, color: '#555' }}>{ref.label}</div>
