@@ -1,3 +1,10 @@
+#!/bin/bash
+# setup2.sh - Optimistic updates + édition offre/tâche
+# Lance depuis la racine du projet : bash setup2.sh
+
+echo "📦 Mise à jour DashboardClient..."
+
+cat > app/dashboard/DashboardClient.tsx << 'ENDOFFILE'
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -612,3 +619,11 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
     </div>
   )
 }
+ENDOFFILE
+
+echo "✅ DashboardClient mis à jour !"
+echo ""
+echo "Lance maintenant :"
+echo "  git add ."
+echo "  git commit -m 'feat: optimistic updates + édition offre/tâche'"
+echo "  git push"
