@@ -1,3 +1,15 @@
+#!/bin/bash
+# setup5.sh - Onglet Références dédié sur chaque offre
+# Lance depuis la racine du projet : bash setup5.sh
+
+echo "📦 Ajout onglet Références..."
+
+# On patch le DashboardClient pour ajouter un onglet "refs" spécial
+# et une table de références au niveau offre (pas par composant)
+
+# D'abord on vérifie que la table offre_refs existe, sinon faut lancer le SQL
+
+cat > app/dashboard/DashboardClient.tsx << 'ENDOFFILE'
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -1050,3 +1062,13 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
     </div>
   )
 }
+ENDOFFILE
+
+echo "✅ Onglet Références ajouté !"
+echo ""
+echo "⚠️  Lance d'abord le SQL dans Supabase (fichier migration_refs.sql)"
+echo ""
+echo "Ensuite :"
+echo "  git add ."
+echo "  git commit -m 'feat: onglet références par offre'"
+echo "  git push"
