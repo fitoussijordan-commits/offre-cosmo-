@@ -82,7 +82,7 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
   const saveEditOffre = async () => {
     if (!editingOffre) return
     // Optimistic
-    updateOffres(prev => prev.map(o => o.id === editingOffre.id ? { ...o, ...editOffreForm } : o))
+    updateOffres(prev => prev.map(o => o.id === editingOffre.id ? { ...o, ...editOffreForm, priority: editOffreForm.priority as "Haute" | "Basse" } : o))
     setEditingOffre(null)
     await supabase.from('offres').update({
       name: editOffreForm.name,
