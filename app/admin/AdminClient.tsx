@@ -4,11 +4,11 @@ import { useRouter } from 'next/navigation'
 import { Profile } from '@/lib/types'
 
 const DEPT_COLORS: Record<string, { bg: string; text: string }> = {
-  Achat:      { bg: '#FFF3E0', text: '#E65100' },
-  Marketing:  { bg: '#F3E5F5', text: '#6A1B9A' },
-  Logistique: { bg: '#E3F2FD', text: '#0D47A1' },
-  ESAT:       { bg: '#E8F5E9', text: '#1B5E20' },
-  Admin:      { bg: '#F5F5F5', text: '#333' },
+  Achat:      { bg: '#FFF7ED', text: '#C2410C' },
+  Marketing:  { bg: '#FAF5FF', text: '#7E22CE' },
+  Logistique: { bg: '#EFF6FF', text: '#1D4ED8' },
+  ESAT:       { bg: '#F0FDF4', text: '#15803D' },
+  Admin:      { bg: '#F4F4F5', text: '#3F3F46' },
 }
 
 export default function AdminClient({ currentUser, users: initialUsers }: { currentUser: Profile, users: Profile[] }) {
@@ -46,45 +46,54 @@ export default function AdminClient({ currentUser, users: initialUsers }: { curr
     setUsers(prev => prev.filter(u => u.id !== id))
   }
 
+  const inputStyle = {
+    width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #E5E2DB',
+    fontSize: 14, boxSizing: 'border-box' as const, background: '#FAFAF8',
+  }
+
   return (
-    <div style={{ fontFamily: 'system-ui', background: '#F8F7F4', minHeight: '100vh', color: '#1C1B18' }}>
+    <div style={{ fontFamily: 'var(--font-sans, system-ui, sans-serif)', background: '#F5F3EF', minHeight: '100vh', color: '#18181B' }}>
 
       {showNew && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#FFF', borderRadius: 16, padding: 32, width: 400, boxShadow: '0 8px 40px rgba(0,0,0,0.15)' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 24px' }}>Nouvel utilisateur</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="modal-backdrop" onClick={() => setShowNew(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}
+            style={{ background: '#FFF', borderRadius: 16, padding: 32, width: 400, boxShadow: 'var(--shadow-xl)', border: '1px solid rgba(0,0,0,0.06)' }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 24px', letterSpacing: '-0.02em' }}>Nouvel utilisateur</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {[
-                { label: 'NOM COMPLET', key: 'full_name', type: 'text', placeholder: 'Marie Dupont' },
-                { label: 'EMAIL', key: 'email', type: 'email', placeholder: 'marie@wala.com' },
-                { label: 'MOT DE PASSE', key: 'password', type: 'password', placeholder: '••••••••' },
+                { label: 'Nom complet', key: 'full_name', type: 'text', placeholder: 'Marie Dupont' },
+                { label: 'Email', key: 'email', type: 'email', placeholder: 'marie@wala.com' },
+                { label: 'Mot de passe', key: 'password', type: 'password', placeholder: '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' },
               ].map(f => (
                 <div key={f.key}>
-                  <label style={{ fontSize: 11, color: '#888', fontWeight: 600, display: 'block', marginBottom: 5 }}>{f.label}</label>
+                  <label style={{ fontSize: 12, color: '#71717A', fontWeight: 600, display: 'block', marginBottom: 6 }}>{f.label}</label>
                   <input
                     type={f.type}
                     placeholder={f.placeholder}
                     value={(form as any)[f.key]}
                     onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 14, boxSizing: 'border-box' }}
+                    style={inputStyle}
                   />
                 </div>
               ))}
               <div>
-                <label style={{ fontSize: 11, color: '#888', fontWeight: 600, display: 'block', marginBottom: 5 }}>DÉPARTEMENT</label>
+                <label style={{ fontSize: 12, color: '#71717A', fontWeight: 600, display: 'block', marginBottom: 6 }}>Département</label>
                 <select value={form.department} onChange={e => setForm(p => ({ ...p, department: e.target.value }))}
-                  style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 14 }}>
+                  style={inputStyle}>
                   {['Achat', 'Marketing', 'Logistique', 'ESAT', 'Admin'].map(d => <option key={d}>{d}</option>)}
                 </select>
               </div>
-              {error && <p style={{ color: '#EF4444', fontSize: 13, margin: 0 }}>{error}</p>}
+              {error && <p style={{ color: '#DC2626', fontSize: 13, margin: 0 }}>{error}</p>}
               <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
                 <button onClick={() => setShowNew(false)}
-                  style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E8E4DC', background: 'transparent', fontSize: 14, cursor: 'pointer' }}>
+                  className="btn-secondary"
+                  style={{ flex: 1, padding: '10px', borderRadius: 8, fontSize: 14 }}>
                   Annuler
                 </button>
                 <button onClick={createUser} disabled={loading}
-                  style={{ flex: 2, padding: '10px', borderRadius: 8, background: '#1C1B18', color: '#FFF', border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: loading ? 0.7 : 1 }}>
+                  className="btn-primary"
+                  style={{ flex: 2, padding: '10px', borderRadius: 8, fontSize: 14, opacity: loading ? 0.7 : 1 }}>
                   {loading ? 'Création...' : 'Créer'}
                 </button>
               </div>
@@ -93,43 +102,45 @@ export default function AdminClient({ currentUser, users: initialUsers }: { curr
         </div>
       )}
 
-      <div style={{ background: '#1C1B18', color: '#F8F7F4', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 52 }}>
+      <div style={{ background: '#18181B', color: '#F5F3EF', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 52 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 26, height: 26, background: '#FFB347', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}>✦</div>
-          <span style={{ fontSize: 16, fontWeight: 700 }}>OffreCosmo</span>
-          <span style={{ fontSize: 12, color: '#888' }}>/ Admin</span>
+          <div style={{ width: 28, height: 28, background: '#D97706', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: '#FFF' }}>&#10022;</div>
+          <span style={{ fontSize: 15, fontWeight: 700 }}>OffreCosmo</span>
+          <span style={{ fontSize: 13, color: '#52525B' }}>/ Admin</span>
         </div>
         <button onClick={() => router.push('/dashboard')}
-          style={{ fontSize: 12, color: '#AAA', background: 'none', border: 'none', cursor: 'pointer' }}>
-          ← Dashboard
+          style={{ fontSize: 13, color: '#A1A1AA', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>
+          &larr; Dashboard
         </button>
       </div>
 
-      <div style={{ maxWidth: 700, margin: '40px auto', padding: '0 24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>Utilisateurs</h1>
+      <div style={{ maxWidth: 680, margin: '36px auto', padding: '0 24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>Utilisateurs</h1>
           <button onClick={() => setShowNew(true)}
-            style={{ padding: '8px 16px', borderRadius: 8, background: '#1C1B18', color: '#FFF', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+            className="btn-primary"
+            style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13 }}>
             + Nouvel utilisateur
           </button>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {users.map(u => (
-            <div key={u.id} style={{ background: '#FFF', border: '1px solid #E8E4DC', borderRadius: 10, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#F0EDE6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#666' }}>
+            <div key={u.id} style={{ background: '#FFF', border: '1px solid #E5E2DB', borderRadius: 10, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14, boxShadow: 'var(--shadow-xs)' }}>
+              <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#F4F4F5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#52525B' }}>
                 {u.full_name.charAt(0)}
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 14, fontWeight: 600 }}>{u.full_name}</div>
-                <div style={{ fontSize: 12, color: '#888' }}>{u.email}</div>
+                <div style={{ fontSize: 12, color: '#71717A' }}>{u.email}</div>
               </div>
-              <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20, background: DEPT_COLORS[u.department]?.bg, color: DEPT_COLORS[u.department]?.text }}>
+              <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 6, background: DEPT_COLORS[u.department]?.bg, color: DEPT_COLORS[u.department]?.text }}>
                 {u.department}
               </span>
               {u.id !== currentUser.id && (
                 <button onClick={() => deleteUser(u.id)}
-                  style={{ padding: '5px 10px', borderRadius: 6, background: '#FEF2F2', color: '#EF4444', border: 'none', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>
+                  className="btn-danger"
+                  style={{ padding: '5px 10px', borderRadius: 6, fontSize: 12 }}>
                   Supprimer
                 </button>
               )}

@@ -7,28 +7,27 @@ const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Aoû
 const MONTHS_SHORT = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc']
 
 const DEPT_COLORS: Record<string, { bg: string; text: string }> = {
-  Achat:      { bg: '#FFF3E0', text: '#E65100' },
-  Marketing:  { bg: '#F3E5F5', text: '#6A1B9A' },
-  Logistique: { bg: '#E3F2FD', text: '#0D47A1' },
-  ESAT:       { bg: '#E8F5E9', text: '#1B5E20' },
-  Admin:      { bg: '#F5F5F5', text: '#333' },
+  Achat:      { bg: '#FFF7ED', text: '#C2410C' },
+  Marketing:  { bg: '#FAF5FF', text: '#7E22CE' },
+  Logistique: { bg: '#EFF6FF', text: '#1D4ED8' },
+  ESAT:       { bg: '#F0FDF4', text: '#15803D' },
+  Admin:      { bg: '#F4F4F5', text: '#3F3F46' },
 }
 
 const STATUS_CONFIG: Record<string, { color: string; bg: string }> = {
-  'En prépa':  { color: '#94A3B8', bg: '#F1F5F9' },
-  'En cours':  { color: '#F59E0B', bg: '#FFFBEB' },
-  'Terminée':  { color: '#10B981', bg: '#ECFDF5' },
-  'Annulée':   { color: '#EF4444', bg: '#FEF2F2' },
+  'En prépa':  { color: '#71717A', bg: '#F4F4F5' },
+  'En cours':  { color: '#D97706', bg: '#FFFBEB' },
+  'Terminée':  { color: '#059669', bg: '#ECFDF5' },
+  'Annulée':   { color: '#DC2626', bg: '#FEF2F2' },
 }
 
 export default function PlanningClient({ profile, offres }: { profile: Profile, offres: Offre[] }) {
   const [selectedOffre, setSelectedOffre] = useState<Offre | null>(null)
-  const [viewYear, setViewYear] = useState(2026)
+  const [viewYear, setViewYear] = useState(new Date().getFullYear())
   const router = useRouter()
 
   const today = new Date()
   const todayMonth = today.getMonth()
-  const todayDay = today.getDate()
   const daysInMonth = (month: number) => new Date(viewYear, month + 1, 0).getDate()
   const totalDays = Array.from({ length: 12 }, (_, i) => daysInMonth(i)).reduce((a, b) => a + b, 0)
 
@@ -63,34 +62,26 @@ export default function PlanningClient({ profile, offres }: { profile: Profile, 
 
   const todayPos = getTodayPosition()
 
-  // Grouper les offres par mois de début
-  const offresParMois: Record<number, Offre[]> = {}
-  offres.forEach(o => {
-    const m = new Date(o.start_date).getMonth()
-    if (!offresParMois[m]) offresParMois[m] = []
-    offresParMois[m].push(o)
-  })
-
   return (
-    <div style={{ fontFamily: 'system-ui, sans-serif', background: '#F8F7F4', minHeight: '100vh', color: '#1C1B18' }}>
+    <div style={{ fontFamily: 'var(--font-sans, system-ui, sans-serif)', background: '#F5F3EF', minHeight: '100vh', color: '#18181B' }}>
 
       {/* HEADER */}
-      <div style={{ background: '#1C1B18', color: '#F8F7F4', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 52 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+      <div style={{ background: '#18181B', color: '#F5F3EF', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 52 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 26, height: 26, background: '#FFB347', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}>✦</div>
-            <span style={{ fontSize: 16, fontWeight: 700 }}>OffreCosmo</span>
+            <div style={{ width: 28, height: 28, background: '#D97706', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: '#FFF' }}>&#10022;</div>
+            <span style={{ fontSize: 15, fontWeight: 700 }}>OffreCosmo</span>
           </div>
-          <div style={{ width: 1, height: 20, background: '#333' }} />
+          <div style={{ width: 1, height: 20, background: '#3F3F46' }} />
           <button onClick={() => router.push('/dashboard')}
-            style={{ fontSize: 13, color: '#888', background: 'none', border: 'none', cursor: 'pointer' }}>
+            style={{ fontSize: 13, color: '#A1A1AA', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>
             Dashboard
           </button>
-          <span style={{ fontSize: 13, color: '#F8F7F4', borderBottom: '1px solid #FFB347', paddingBottom: 2 }}>Planning</span>
+          <span style={{ fontSize: 13, color: '#F5F3EF', borderBottom: '1px solid #D97706', paddingBottom: 2, fontWeight: 500 }}>Planning</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 12, color: '#AAA' }}>{profile?.full_name}</span>
-          <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: DEPT_COLORS[profile?.department]?.bg, color: DEPT_COLORS[profile?.department]?.text, fontWeight: 600 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 13, color: '#A1A1AA' }}>{profile?.full_name}</span>
+          <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 6, background: DEPT_COLORS[profile?.department]?.bg, color: DEPT_COLORS[profile?.department]?.text, fontWeight: 600 }}>
             {profile?.department}
           </span>
         </div>
@@ -102,31 +93,31 @@ export default function PlanningClient({ profile, offres }: { profile: Profile, 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
           {/* Année selector + légende */}
-          <div style={{ padding: '14px 24px', borderBottom: '1px solid #E8E4DC', background: '#FFF', display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ padding: '12px 24px', borderBottom: '1px solid #E5E2DB', background: '#FFF', display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <button onClick={() => setViewYear(y => y - 1)}
-                style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid #E8E4DC', background: 'transparent', cursor: 'pointer', fontSize: 14 }}>‹</button>
-              <span style={{ fontSize: 16, fontWeight: 700, minWidth: 50, textAlign: 'center' }}>{viewYear}</span>
+                style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid #E5E2DB', background: 'transparent', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&lsaquo;</button>
+              <span style={{ fontSize: 15, fontWeight: 700, minWidth: 48, textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>{viewYear}</span>
               <button onClick={() => setViewYear(y => y + 1)}
-                style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid #E8E4DC', background: 'transparent', cursor: 'pointer', fontSize: 14 }}>›</button>
+                style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid #E5E2DB', background: 'transparent', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&rsaquo;</button>
             </div>
-            <div style={{ width: 1, height: 20, background: '#E8E4DC' }} />
-            <div style={{ display: 'flex', gap: 16, fontSize: 12, color: '#888' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <div style={{ width: 12, height: 12, borderRadius: 3, background: '#E8E4DC' }} />
+            <div style={{ width: 1, height: 18, background: '#E5E2DB' }} />
+            <div style={{ display: 'flex', gap: 14, fontSize: 12, color: '#71717A' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <div style={{ width: 10, height: 10, borderRadius: 3, background: '#E5E2DB' }} />
                 <span>{offres.length} offres</span>
               </div>
               {todayPos !== null && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <div style={{ width: 2, height: 12, background: '#EF4444', borderRadius: 1 }} />
-                  <span>Aujourd'hui</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <div style={{ width: 2, height: 10, background: '#DC2626', borderRadius: 1 }} />
+                  <span>Aujourd&apos;hui</span>
                 </div>
               )}
             </div>
             <div style={{ flex: 1 }} />
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 6 }}>
               {Object.entries(STATUS_CONFIG).map(([s, c]) => (
-                <span key={s} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: c.bg, color: c.color, fontWeight: 500 }}>{s}</span>
+                <span key={s} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 5, background: c.bg, color: c.color, fontWeight: 500 }}>{s}</span>
               ))}
             </div>
           </div>
@@ -135,16 +126,16 @@ export default function PlanningClient({ profile, offres }: { profile: Profile, 
           <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
 
             {/* En-tête mois */}
-            <div style={{ position: 'sticky', top: 0, zIndex: 10, background: '#FFF', borderBottom: '1px solid #E8E4DC', display: 'flex', marginLeft: 220 }}>
+            <div style={{ position: 'sticky', top: 0, zIndex: 10, background: '#FFF', borderBottom: '1px solid #E5E2DB', display: 'flex', marginLeft: 210 }}>
               {MONTHS_SHORT.map((m, i) => (
                 <div key={i} style={{
                   flex: daysInMonth(i),
-                  padding: '8px 0',
+                  padding: '7px 0',
                   fontSize: 11,
                   fontWeight: i === todayMonth && viewYear === today.getFullYear() ? 700 : 500,
-                  color: i === todayMonth && viewYear === today.getFullYear() ? '#1C1B18' : '#888',
+                  color: i === todayMonth && viewYear === today.getFullYear() ? '#18181B' : '#A1A1AA',
                   textAlign: 'center',
-                  borderRight: '1px solid #F0EDE6',
+                  borderRight: '1px solid #EEEBE5',
                   background: i === todayMonth && viewYear === today.getFullYear() ? '#FFFBEB' : 'transparent',
                 }}>
                   {m}
@@ -153,9 +144,9 @@ export default function PlanningClient({ profile, offres }: { profile: Profile, 
             </div>
 
             {/* Lignes offres */}
-            <div style={{ padding: '8px 0' }}>
+            <div style={{ padding: '4px 0' }}>
               {offres.length === 0 && (
-                <div style={{ padding: '40px', textAlign: 'center', color: '#AAA', fontSize: 14 }}>
+                <div style={{ padding: '40px', textAlign: 'center', color: '#A1A1AA', fontSize: 14 }}>
                   Aucune offre pour {viewYear}
                 </div>
               )}
@@ -170,29 +161,29 @@ export default function PlanningClient({ profile, offres }: { profile: Profile, 
                 return (
                   <div key={offre.id}
                     onClick={() => setSelectedOffre(isSelected ? null : offre)}
+                    className="row-hover"
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      height: 52,
+                      height: 48,
                       cursor: 'pointer',
-                      background: isSelected ? '#F0EDE6' : idx % 2 === 0 ? '#FFF' : '#FAFAF8',
-                      borderBottom: '1px solid #F0EDE6',
-                      transition: 'background 0.1s',
+                      background: isSelected ? '#F4F4F5' : idx % 2 === 0 ? '#FFF' : '#FAFAF8',
+                      borderBottom: '1px solid #EEEBE5',
                     }}>
 
                     {/* Nom offre */}
-                    <div style={{ width: 220, flexShrink: 0, padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <div style={{ width: 210, flexShrink: 0, padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 2 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: offre.color, flexShrink: 0 }} />
+                        <div style={{ width: 7, height: 7, borderRadius: '50%', background: offre.color, flexShrink: 0 }} />
                         <span style={{ fontSize: 12, fontWeight: 600, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
                           {offre.name}
                         </span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, paddingLeft: 14 }}>
-                        <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 10, background: sc.bg, color: sc.color, fontWeight: 500 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5, paddingLeft: 13 }}>
+                        <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: sc.bg, color: sc.color, fontWeight: 500 }}>
                           {offre.status}
                         </span>
-                        {blocked > 0 && <span style={{ fontSize: 10, color: '#EF4444' }}>⚠ {blocked}</span>}
+                        {blocked > 0 && <span style={{ fontSize: 10, color: '#DC2626' }}>&#9888; {blocked}</span>}
                       </div>
                     </div>
 
@@ -205,8 +196,8 @@ export default function PlanningClient({ profile, offres }: { profile: Profile, 
                           <div key={i} style={{
                             flex: daysInMonth(i),
                             height: '100%',
-                            borderRight: '1px solid #F0EDE6',
-                            background: i === todayMonth && viewYear === today.getFullYear() ? 'rgba(245,158,11,0.04)' : 'transparent',
+                            borderRight: '1px solid #EEEBE5',
+                            background: i === todayMonth && viewYear === today.getFullYear() ? 'rgba(217,119,6,0.03)' : 'transparent',
                           }} />
                         ))}
                       </div>
@@ -217,9 +208,9 @@ export default function PlanningClient({ profile, offres }: { profile: Profile, 
                           position: 'absolute',
                           left: `${todayPos}%`,
                           top: 0, bottom: 0,
-                          width: 2,
-                          background: '#EF4444',
-                          opacity: 0.4,
+                          width: 1.5,
+                          background: '#DC2626',
+                          opacity: 0.35,
                           pointerEvents: 'none',
                           zIndex: 2,
                         }} />
@@ -227,20 +218,19 @@ export default function PlanningClient({ profile, offres }: { profile: Profile, 
 
                       {/* Barre offre */}
                       {barStyle && (
-                        <div style={{
+                        <div className="gantt-bar" style={{
                           position: 'absolute',
                           left: barStyle.left,
                           width: barStyle.width,
-                          height: 28,
-                          borderRadius: 6,
+                          height: 24,
+                          borderRadius: 5,
                           background: offre.color,
                           opacity: isSelected ? 1 : 0.85,
                           zIndex: 3,
                           display: 'flex',
                           alignItems: 'center',
                           overflow: 'hidden',
-                          boxShadow: isSelected ? `0 2px 8px ${offre.color}66` : 'none',
-                          transition: 'all 0.15s',
+                          boxShadow: isSelected ? `0 2px 8px ${offre.color}44` : 'none',
                         }}>
                           {/* Progress fill */}
                           <div style={{
@@ -248,27 +238,26 @@ export default function PlanningClient({ profile, offres }: { profile: Profile, 
                             left: 0, top: 0, bottom: 0,
                             width: `${progress}%`,
                             background: 'rgba(0,0,0,0.15)',
-                            borderRadius: '6px 0 0 6px',
+                            borderRadius: '5px 0 0 5px',
                           }} />
                           <span style={{
                             position: 'relative',
-                            fontSize: 11,
+                            fontSize: 10,
                             fontWeight: 600,
                             color: '#FFF',
-                            padding: '0 10px',
+                            padding: '0 8px',
                             whiteSpace: 'nowrap',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             textShadow: '0 1px 2px rgba(0,0,0,0.2)',
                           }}>
-                            {progress > 0 && `${progress}% · `}{offre.name}
+                            {progress > 0 && `${progress}% \u00B7 `}{offre.name}
                           </span>
                         </div>
                       )}
 
-                      {/* Pas dans l'année */}
                       {!barStyle && (
-                        <div style={{ position: 'absolute', right: 8, fontSize: 11, color: '#CCC' }}>
+                        <div style={{ position: 'absolute', right: 8, fontSize: 11, color: '#D1CEC7' }}>
                           hors {viewYear}
                         </div>
                       )}
@@ -282,31 +271,31 @@ export default function PlanningClient({ profile, offres }: { profile: Profile, 
 
         {/* DETAIL PANEL */}
         {selectedOffre && (
-          <div style={{ width: 300, borderLeft: '1px solid #E8E4DC', background: '#FFF', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid #E8E4DC' }}>
+          <div style={{ width: 290, borderLeft: '1px solid #E5E2DB', background: '#FFF', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid #E5E2DB' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <div style={{ width: 10, height: 10, borderRadius: '50%', background: selectedOffre.color }} />
-                <span style={{ fontSize: 15, fontWeight: 700 }}>{selectedOffre.name}</span>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: selectedOffre.color }} />
+                <span style={{ fontSize: 14, fontWeight: 700, flex: 1, letterSpacing: '-0.01em' }}>{selectedOffre.name}</span>
                 <button onClick={() => setSelectedOffre(null)}
-                  style={{ marginLeft: 'auto', background: 'none', border: 'none', fontSize: 16, color: '#AAA', cursor: 'pointer' }}>✕</button>
+                  style={{ background: 'none', border: 'none', fontSize: 14, color: '#A1A1AA', cursor: 'pointer' }}>&#10005;</button>
               </div>
-              <div style={{ fontSize: 12, color: '#888', marginBottom: 10 }}>
+              <div style={{ fontSize: 12, color: '#71717A', marginBottom: 10 }}>
                 {new Date(selectedOffre.start_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
-                {' → '}
+                {' \u2192 '}
                 {new Date(selectedOffre.end_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
               </div>
-              <div style={{ background: '#F0EDE6', borderRadius: 4, height: 5, marginBottom: 6 }}>
-                <div style={{ width: `${getProgress(selectedOffre)}%`, height: '100%', background: selectedOffre.color, borderRadius: 4 }} />
+              <div style={{ background: '#F4F4F5', borderRadius: 4, height: 4, marginBottom: 6 }}>
+                <div className="progress-bar" style={{ width: `${getProgress(selectedOffre)}%`, height: '100%', background: selectedOffre.color, borderRadius: 4 }} />
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#888' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#71717A' }}>
                 <span>{selectedOffre.tasks?.filter(t => t.status === 'Fait').length || 0}/{selectedOffre.tasks?.length || 0} tâches</span>
-                <span style={{ fontWeight: 600, color: '#1C1B18' }}>{getProgress(selectedOffre)}%</span>
+                <span style={{ fontWeight: 700, color: '#18181B', fontVariantNumeric: 'tabular-nums' }}>{getProgress(selectedOffre)}%</span>
               </div>
             </div>
 
             {/* Stats par dept */}
-            <div style={{ padding: '12px 20px', borderBottom: '1px solid #E8E4DC' }}>
-              <div style={{ fontSize: 10, fontWeight: 600, color: '#AAA', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>Par département</div>
+            <div style={{ padding: '12px 18px', borderBottom: '1px solid #E5E2DB' }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: '#A1A1AA', marginBottom: 10 }}>Par département</div>
               {(['Achat', 'Marketing', 'Logistique', 'ESAT'] as const).map(dept => {
                 const dt = selectedOffre.tasks?.filter(t => t.department === dept) || []
                 if (!dt.length) return null
@@ -317,14 +306,14 @@ export default function PlanningClient({ profile, offres }: { profile: Profile, 
                 return (
                   <div key={dept} style={{ marginBottom: 10 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: dc.text, background: dc.bg, padding: '2px 8px', borderRadius: 20 }}>{dept}</span>
-                      <div style={{ display: 'flex', gap: 8, fontSize: 11, color: '#888' }}>
-                        {blocked > 0 && <span style={{ color: '#EF4444' }}>⚠ {blocked}</span>}
-                        <span>{done}/{dt.length}</span>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: dc.text, background: dc.bg, padding: '2px 8px', borderRadius: 5 }}>{dept}</span>
+                      <div style={{ display: 'flex', gap: 6, fontSize: 11, color: '#71717A' }}>
+                        {blocked > 0 && <span style={{ color: '#DC2626' }}>&#9888; {blocked}</span>}
+                        <span style={{ fontVariantNumeric: 'tabular-nums' }}>{done}/{dt.length}</span>
                       </div>
                     </div>
-                    <div style={{ background: '#F0EDE6', borderRadius: 3, height: 4 }}>
-                      <div style={{ width: `${pct}%`, height: '100%', background: dc.text, borderRadius: 3, opacity: 0.6 }} />
+                    <div style={{ background: '#F4F4F5', borderRadius: 3, height: 3 }}>
+                      <div className="progress-bar" style={{ width: `${pct}%`, height: '100%', background: dc.text, borderRadius: 3, opacity: 0.5 }} />
                     </div>
                   </div>
                 )
@@ -333,11 +322,11 @@ export default function PlanningClient({ profile, offres }: { profile: Profile, 
 
             {/* Tâches bloquées */}
             {selectedOffre.tasks?.some(t => t.status === 'Bloqué') && (
-              <div style={{ padding: '12px 20px', borderBottom: '1px solid #E8E4DC' }}>
-                <div style={{ fontSize: 10, fontWeight: 600, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>⚠ Bloquées</div>
+              <div style={{ padding: '12px 18px', borderBottom: '1px solid #E5E2DB' }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#DC2626', marginBottom: 8 }}>&#9888; Bloquées</div>
                 {selectedOffre.tasks?.filter(t => t.status === 'Bloqué').map(t => (
-                  <div key={t.id} style={{ fontSize: 12, color: '#555', padding: '4px 0', borderBottom: '1px solid #F8F7F4', display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 10, background: DEPT_COLORS[t.department]?.bg, color: DEPT_COLORS[t.department]?.text, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                  <div key={t.id} style={{ fontSize: 12, color: '#3F3F46', padding: '4px 0', borderBottom: '1px solid #F4F4F5', display: 'flex', gap: 6, alignItems: 'center' }}>
+                    <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: DEPT_COLORS[t.department]?.bg, color: DEPT_COLORS[t.department]?.text, fontWeight: 600, whiteSpace: 'nowrap' }}>
                       {t.department}
                     </span>
                     {t.label}
@@ -347,8 +336,8 @@ export default function PlanningClient({ profile, offres }: { profile: Profile, 
             )}
 
             {/* Deadlines à venir */}
-            <div style={{ padding: '12px 20px', flex: 1, overflowY: 'auto' }}>
-              <div style={{ fontSize: 10, fontWeight: 600, color: '#AAA', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Prochaines deadlines</div>
+            <div style={{ padding: '12px 18px', flex: 1, overflowY: 'auto' }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: '#A1A1AA', marginBottom: 8 }}>Prochaines deadlines</div>
               {selectedOffre.tasks
                 ?.filter(t => t.deadline && t.status !== 'Fait')
                 .sort((a, b) => new Date(a.deadline!).getTime() - new Date(b.deadline!).getTime())
@@ -359,18 +348,19 @@ export default function PlanningClient({ profile, offres }: { profile: Profile, 
                   const isLate = daysLeft < 0
                   const isSoon = daysLeft >= 0 && daysLeft <= 3
                   return (
-                    <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid #F8F7F4' }}>
+                    <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 0', borderBottom: '1px solid #F4F4F5' }}>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 12, color: '#1C1B18', marginBottom: 2 }}>{t.label}</div>
-                        <div style={{ fontSize: 10, color: '#888' }}>
+                        <div style={{ fontSize: 12, color: '#18181B', marginBottom: 1 }}>{t.label}</div>
+                        <div style={{ fontSize: 10, color: '#A1A1AA' }}>
                           {dl.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                         </div>
                       </div>
                       <span style={{
-                        fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10,
-                        background: isLate ? '#FEF2F2' : isSoon ? '#FFFBEB' : '#F1F5F9',
-                        color: isLate ? '#EF4444' : isSoon ? '#F59E0B' : '#94A3B8',
+                        fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 4,
+                        background: isLate ? '#FEF2F2' : isSoon ? '#FFFBEB' : '#F4F4F5',
+                        color: isLate ? '#DC2626' : isSoon ? '#D97706' : '#71717A',
                         whiteSpace: 'nowrap',
+                        fontVariantNumeric: 'tabular-nums',
                       }}>
                         {isLate ? `J+${Math.abs(daysLeft)}` : daysLeft === 0 ? "Auj." : `J-${daysLeft}`}
                       </span>
@@ -378,14 +368,15 @@ export default function PlanningClient({ profile, offres }: { profile: Profile, 
                   )
                 })}
               {!selectedOffre.tasks?.some(t => t.deadline && t.status !== 'Fait') && (
-                <div style={{ fontSize: 12, color: '#CCC' }}>Aucune deadline</div>
+                <div style={{ fontSize: 12, color: '#D1CEC7' }}>Aucune deadline</div>
               )}
             </div>
 
-            <div style={{ padding: '12px 20px', borderTop: '1px solid #E8E4DC' }}>
+            <div style={{ padding: '12px 18px', borderTop: '1px solid #E5E2DB' }}>
               <button onClick={() => router.push('/dashboard')}
-                style={{ width: '100%', padding: '9px', borderRadius: 8, background: '#1C1B18', color: '#FFF', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                Voir les tâches →
+                className="btn-primary"
+                style={{ width: '100%', padding: '9px', borderRadius: 8, fontSize: 13 }}>
+                Voir les tâches &rarr;
               </button>
             </div>
           </div>
