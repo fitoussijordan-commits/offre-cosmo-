@@ -41,6 +41,19 @@ interface OffreRef {
 
 interface Component { id: string; offre_id: string; name: string; refs: any[]; tasks: Task[] }
 
+// ── Modal wrapper ────────────────────────────────────────────────
+function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  return (
+    <div className="modal-backdrop" onClick={onClose}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}
+        style={{ background: '#FFF', borderRadius: 20, padding: '36px 32px', boxShadow: 'var(--shadow-xl)', border: '1px solid rgba(232,228,220,0.5)' }}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
 export default function DashboardClient({ profile, offres: initialOffres }: { profile: Profile, offres: Offre[] }) {
   const [offres, setOffres] = useState<Offre[]>(initialOffres)
   const [selectedId, setSelectedId] = useState<string | null>(initialOffres[0]?.id || null)
@@ -365,254 +378,312 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
     return acc
   }, {} as Record<string, OffreRef[]>)
 
+  // ── Shared input style ───────────────────────────────────────────────────
+  const inputStyle = {
+    width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #E8E4DC',
+    fontSize: 14, boxSizing: 'border-box' as const, background: '#FAFAF8',
+  }
+  const labelStyle = {
+    fontSize: 11, color: '#999', fontWeight: 600 as const, display: 'block' as const,
+    marginBottom: 6, textTransform: 'uppercase' as const, letterSpacing: '0.06em',
+  }
+
   return (
-    <div style={{ fontFamily: 'system-ui, sans-serif', background: '#F8F7F4', minHeight: '100vh', color: '#1C1B18' }}>
+    <div style={{ fontFamily: 'var(--font-sans, system-ui, sans-serif)', background: '#F8F7F4', minHeight: '100vh', color: '#1C1B18' }}>
 
       {/* MODAL NOUVELLE OFFRE */}
       {showNewOffre && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#FFF', borderRadius: 16, padding: 32, width: 440, boxShadow: '0 8px 40px rgba(0,0,0,0.15)' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 24px' }}>Nouvelle offre</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <Modal onClose={() => setShowNewOffre(false)}>
+          <div style={{ width: 440 }}>
+            <h2 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 6px', letterSpacing: '-0.02em' }}>Nouvelle offre</h2>
+            <p style={{ fontSize: 13, color: '#999', margin: '0 0 24px' }}>Créer une nouvelle offre pour le planning</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
-                <label style={{ fontSize: 11, color: '#888', fontWeight: 600, display: 'block', marginBottom: 5 }}>NOM</label>
+                <label style={labelStyle}>NOM</label>
                 <input value={newOffre.name} onChange={e => setNewOffre(p => ({ ...p, name: e.target.value }))}
-                  placeholder="Ex: Crème Visage Printemps"
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 14, boxSizing: 'border-box' }} />
+                  placeholder="Ex: Crème Visage Printemps" autoFocus
+                  style={inputStyle} />
               </div>
               <div style={{ display: 'flex', gap: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 11, color: '#888', fontWeight: 600, display: 'block', marginBottom: 5 }}>DÉBUT</label>
+                  <label style={labelStyle}>DÉBUT</label>
                   <input type="date" value={newOffre.start_date} onChange={e => setNewOffre(p => ({ ...p, start_date: e.target.value }))}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 14, boxSizing: 'border-box' }} />
+                    style={inputStyle} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 11, color: '#888', fontWeight: 600, display: 'block', marginBottom: 5 }}>FIN</label>
+                  <label style={labelStyle}>FIN</label>
                   <input type="date" value={newOffre.end_date} onChange={e => setNewOffre(p => ({ ...p, end_date: e.target.value }))}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 14, boxSizing: 'border-box' }} />
+                    style={inputStyle} />
                 </div>
               </div>
               <div>
-                <label style={{ fontSize: 11, color: '#888', fontWeight: 600, display: 'block', marginBottom: 5 }}>PRIORITÉ</label>
+                <label style={labelStyle}>PRIORITÉ</label>
                 <select value={newOffre.priority} onChange={e => setNewOffre(p => ({ ...p, priority: e.target.value }))}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 14 }}>
+                  style={inputStyle}>
                   <option>Basse</option><option>Haute</option>
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 11, color: '#888', fontWeight: 600, display: 'block', marginBottom: 8 }}>COULEUR</label>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <label style={{ ...labelStyle, marginBottom: 10 }}>COULEUR</label>
+                <div style={{ display: 'flex', gap: 10 }}>
                   {COLORS.map(c => (
                     <div key={c} onClick={() => setNewOffre(p => ({ ...p, color: c }))}
-                      style={{ width: 28, height: 28, borderRadius: '50%', background: c, cursor: 'pointer', border: newOffre.color === c ? '3px solid #1C1B18' : '3px solid transparent' }} />
+                      style={{
+                        width: 30, height: 30, borderRadius: '50%', background: c, cursor: 'pointer',
+                        border: newOffre.color === c ? '3px solid #1C1B18' : '3px solid transparent',
+                        boxShadow: newOffre.color === c ? '0 2px 8px rgba(0,0,0,0.15)' : 'none',
+                        transition: 'all 150ms',
+                      }} />
                   ))}
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
                 <button onClick={() => setShowNewOffre(false)}
-                  style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E8E4DC', background: 'transparent', fontSize: 14, cursor: 'pointer' }}>
+                  style={{ flex: 1, padding: '11px', borderRadius: 10, border: '1px solid #E8E4DC', background: 'transparent', fontSize: 14, cursor: 'pointer', fontWeight: 500 }}>
                   Annuler
                 </button>
                 <button onClick={createOffre} disabled={creating}
-                  style={{ flex: 2, padding: '10px', borderRadius: 8, background: '#1C1B18', color: '#FFF', border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: creating ? 0.7 : 1 }}>
+                  style={{ flex: 2, padding: '11px', borderRadius: 10, background: '#1C1B18', color: '#FFF', border: 'none', fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: creating ? 0.7 : 1 }}>
                   {creating ? 'Création...' : "Créer l'offre"}
                 </button>
               </div>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* MODAL ÉDITION OFFRE */}
       {editingOffre && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#FFF', borderRadius: 16, padding: 32, width: 440, boxShadow: '0 8px 40px rgba(0,0,0,0.15)' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 24px' }}>Modifier l'offre</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <Modal onClose={() => setEditingOffre(null)}>
+          <div style={{ width: 440 }}>
+            <h2 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 6px', letterSpacing: '-0.02em' }}>Modifier l&apos;offre</h2>
+            <p style={{ fontSize: 13, color: '#999', margin: '0 0 24px' }}>Éditer les détails de l&apos;offre</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
-                <label style={{ fontSize: 11, color: '#888', fontWeight: 600, display: 'block', marginBottom: 5 }}>NOM</label>
+                <label style={labelStyle}>NOM</label>
                 <input value={editOffreForm.name} onChange={e => setEditOffreForm(p => ({ ...p, name: e.target.value }))}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 14, boxSizing: 'border-box' }} />
+                  style={inputStyle} />
               </div>
               <div style={{ display: 'flex', gap: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 11, color: '#888', fontWeight: 600, display: 'block', marginBottom: 5 }}>DÉBUT</label>
+                  <label style={labelStyle}>DÉBUT</label>
                   <input type="date" value={editOffreForm.start_date} onChange={e => setEditOffreForm(p => ({ ...p, start_date: e.target.value }))}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 14, boxSizing: 'border-box' }} />
+                    style={inputStyle} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 11, color: '#888', fontWeight: 600, display: 'block', marginBottom: 5 }}>FIN</label>
+                  <label style={labelStyle}>FIN</label>
                   <input type="date" value={editOffreForm.end_date} onChange={e => setEditOffreForm(p => ({ ...p, end_date: e.target.value }))}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 14, boxSizing: 'border-box' }} />
+                    style={inputStyle} />
                 </div>
               </div>
               <div>
-                <label style={{ fontSize: 11, color: '#888', fontWeight: 600, display: 'block', marginBottom: 5 }}>PRIORITÉ</label>
+                <label style={labelStyle}>PRIORITÉ</label>
                 <select value={editOffreForm.priority} onChange={e => setEditOffreForm(p => ({ ...p, priority: e.target.value }))}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 14 }}>
+                  style={inputStyle}>
                   <option>Basse</option><option>Haute</option>
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 11, color: '#888', fontWeight: 600, display: 'block', marginBottom: 8 }}>COULEUR</label>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <label style={{ ...labelStyle, marginBottom: 10 }}>COULEUR</label>
+                <div style={{ display: 'flex', gap: 10 }}>
                   {COLORS.map(c => (
                     <div key={c} onClick={() => setEditOffreForm(p => ({ ...p, color: c }))}
-                      style={{ width: 28, height: 28, borderRadius: '50%', background: c, cursor: 'pointer', border: editOffreForm.color === c ? '3px solid #1C1B18' : '3px solid transparent' }} />
+                      style={{
+                        width: 30, height: 30, borderRadius: '50%', background: c, cursor: 'pointer',
+                        border: editOffreForm.color === c ? '3px solid #1C1B18' : '3px solid transparent',
+                        boxShadow: editOffreForm.color === c ? '0 2px 8px rgba(0,0,0,0.15)' : 'none',
+                        transition: 'all 150ms',
+                      }} />
                   ))}
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
                 <button onClick={() => deleteOffre(editingOffre.id)}
-                  style={{ padding: '10px 16px', borderRadius: 8, border: 'none', background: '#FEF2F2', color: '#EF4444', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                  style={{ padding: '11px 18px', borderRadius: 10, border: 'none', background: '#FEF2F2', color: '#EF4444', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
                   Supprimer
                 </button>
                 <div style={{ flex: 1 }} />
                 <button onClick={() => setEditingOffre(null)}
-                  style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid #E8E4DC', background: 'transparent', fontSize: 14, cursor: 'pointer' }}>
+                  style={{ padding: '11px 18px', borderRadius: 10, border: '1px solid #E8E4DC', background: 'transparent', fontSize: 14, cursor: 'pointer', fontWeight: 500 }}>
                   Annuler
                 </button>
                 <button onClick={saveEditOffre}
-                  style={{ padding: '10px 20px', borderRadius: 8, background: '#1C1B18', color: '#FFF', border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                  style={{ padding: '11px 22px', borderRadius: 10, background: '#1C1B18', color: '#FFF', border: 'none', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
                   Sauvegarder
                 </button>
               </div>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* MODAL ÉDITION TÂCHE */}
       {editingTask && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#FFF', borderRadius: 16, padding: 32, width: 400, boxShadow: '0 8px 40px rgba(0,0,0,0.15)' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 24px' }}>Modifier la tâche</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <Modal onClose={() => setEditingTask(null)}>
+          <div style={{ width: 400 }}>
+            <h2 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 24px', letterSpacing: '-0.02em' }}>Modifier la tâche</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
-                <label style={{ fontSize: 11, color: '#888', fontWeight: 600, display: 'block', marginBottom: 5 }}>LABEL</label>
+                <label style={labelStyle}>LABEL</label>
                 <input value={editTaskForm.label} onChange={e => setEditTaskForm(p => ({ ...p, label: e.target.value }))}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 14, boxSizing: 'border-box' }} />
+                  style={inputStyle} />
               </div>
               <div>
-                <label style={{ fontSize: 11, color: '#888', fontWeight: 600, display: 'block', marginBottom: 5 }}>DÉPARTEMENT</label>
+                <label style={labelStyle}>DÉPARTEMENT</label>
                 <select value={editTaskForm.department} onChange={e => setEditTaskForm(p => ({ ...p, department: e.target.value }))}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 14 }}>
+                  style={inputStyle}>
                   {['Achat', 'Marketing', 'Logistique', 'ESAT'].map(d => <option key={d}>{d}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 11, color: '#888', fontWeight: 600, display: 'block', marginBottom: 5 }}>DEADLINE</label>
+                <label style={labelStyle}>DEADLINE</label>
                 <input type="date" value={editTaskForm.deadline} onChange={e => setEditTaskForm(p => ({ ...p, deadline: e.target.value }))}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 14, boxSizing: 'border-box' }} />
+                  style={inputStyle} />
               </div>
               <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
                 <button onClick={() => { deleteTask(editingTask.id); setEditingTask(null) }}
-                  style={{ padding: '10px 16px', borderRadius: 8, border: 'none', background: '#FEF2F2', color: '#EF4444', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                  style={{ padding: '11px 18px', borderRadius: 10, border: 'none', background: '#FEF2F2', color: '#EF4444', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
                   Supprimer
                 </button>
                 <div style={{ flex: 1 }} />
                 <button onClick={() => setEditingTask(null)}
-                  style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid #E8E4DC', background: 'transparent', fontSize: 14, cursor: 'pointer' }}>
+                  style={{ padding: '11px 18px', borderRadius: 10, border: '1px solid #E8E4DC', background: 'transparent', fontSize: 14, cursor: 'pointer', fontWeight: 500 }}>
                   Annuler
                 </button>
                 <button onClick={saveEditTask}
-                  style={{ padding: '10px 20px', borderRadius: 8, background: '#1C1B18', color: '#FFF', border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                  style={{ padding: '11px 22px', borderRadius: 10, background: '#1C1B18', color: '#FFF', border: 'none', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
                   Sauvegarder
                 </button>
               </div>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* MODAL ÉDITION REF */}
       {editingRef && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#FFF', borderRadius: 16, padding: 32, width: 440, boxShadow: '0 8px 40px rgba(0,0,0,0.15)' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 24px' }}>Modifier la référence</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <Modal onClose={() => setEditingRef(null)}>
+          <div style={{ width: 440 }}>
+            <h2 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 24px', letterSpacing: '-0.02em' }}>Modifier la référence</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ display: 'flex', gap: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 11, color: '#888', fontWeight: 600, display: 'block', marginBottom: 5 }}>RÉFÉRENCE</label>
+                  <label style={labelStyle}>RÉFÉRENCE</label>
                   <input value={editingRef.reference} onChange={e => setEditingRef(p => p ? { ...p, reference: e.target.value } : null)}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 14, fontFamily: 'monospace', boxSizing: 'border-box' }} />
+                    style={{ ...inputStyle, fontFamily: 'monospace' }} />
                 </div>
                 <div style={{ width: 100 }}>
-                  <label style={{ fontSize: 11, color: '#888', fontWeight: 600, display: 'block', marginBottom: 5 }}>QUANTITÉ</label>
+                  <label style={labelStyle}>QUANTITÉ</label>
                   <input type="number" value={editingRef.quantity} onChange={e => setEditingRef(p => p ? { ...p, quantity: parseInt(e.target.value) || 0 } : null)}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 14, boxSizing: 'border-box' }} />
+                    style={inputStyle} />
                 </div>
               </div>
               <div>
-                <label style={{ fontSize: 11, color: '#888', fontWeight: 600, display: 'block', marginBottom: 5 }}>DÉSIGNATION</label>
+                <label style={labelStyle}>DÉSIGNATION</label>
                 <input value={editingRef.label} onChange={e => setEditingRef(p => p ? { ...p, label: e.target.value } : null)}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 14, boxSizing: 'border-box' }} />
+                  style={inputStyle} />
               </div>
               <div style={{ display: 'flex', gap: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 11, color: '#888', fontWeight: 600, display: 'block', marginBottom: 5 }}>TYPE</label>
+                  <label style={labelStyle}>TYPE</label>
                   <select value={editingRef.type} onChange={e => setEditingRef(p => p ? { ...p, type: e.target.value } : null)}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 14 }}>
+                    style={inputStyle}>
                     {REF_TYPES.map(t => <option key={t}>{t}</option>)}
                   </select>
                 </div>
-                <div style={{ width: 110 }}>
-                  <label style={{ fontSize: 11, color: '#888', fontWeight: 600, display: 'block', marginBottom: 5 }}>UNITÉ</label>
+                <div style={{ width: 120 }}>
+                  <label style={labelStyle}>UNITÉ</label>
                   <select value={editingRef.unit} onChange={e => setEditingRef(p => p ? { ...p, unit: e.target.value } : null)}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 14 }}>
+                    style={inputStyle}>
                     {['unité', 'kg', 'litre', 'ml', 'g', 'boîte', 'palette'].map(u => <option key={u}>{u}</option>)}
                   </select>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
                 <button onClick={() => { deleteRef(editingRef.id); setEditingRef(null) }}
-                  style={{ padding: '10px 16px', borderRadius: 8, border: 'none', background: '#FEF2F2', color: '#EF4444', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                  style={{ padding: '11px 18px', borderRadius: 10, border: 'none', background: '#FEF2F2', color: '#EF4444', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
                   Supprimer
                 </button>
                 <div style={{ flex: 1 }} />
                 <button onClick={() => setEditingRef(null)}
-                  style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid #E8E4DC', background: 'transparent', fontSize: 14, cursor: 'pointer' }}>
+                  style={{ padding: '11px 18px', borderRadius: 10, border: '1px solid #E8E4DC', background: 'transparent', fontSize: 14, cursor: 'pointer', fontWeight: 500 }}>
                   Annuler
                 </button>
                 <button onClick={saveEditRef}
-                  style={{ padding: '10px 20px', borderRadius: 8, background: '#1C1B18', color: '#FFF', border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                  style={{ padding: '11px 22px', borderRadius: 10, background: '#1C1B18', color: '#FFF', border: 'none', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
                   Sauvegarder
                 </button>
               </div>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
 
-      {/* HEADER */}
-      <div style={{ background: '#1C1B18', color: '#F8F7F4', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 52 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 26, height: 26, background: '#FFB347', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}>✦</div>
-          <span style={{ fontSize: 16, fontWeight: 700 }}>OffreCosmo</span>
+      {/* ── HEADER ────────────────────────────────────────────────────── */}
+      <header style={{
+        background: 'linear-gradient(135deg, #1C1B18, #2A2926)', color: '#F8F7F4',
+        padding: '0 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        height: 56, borderBottom: '1px solid rgba(255,255,255,0.06)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{
+            width: 30, height: 30, background: 'linear-gradient(135deg, #FFB347, #FF9500)',
+            borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 14, boxShadow: '0 2px 6px rgba(255,179,71,0.3)',
+          }}>✦</div>
+          <span style={{ fontSize: 17, fontWeight: 800, letterSpacing: '-0.02em' }}>OffreCosmo</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <span style={{ fontSize: 12, color: '#AAA' }}>{profile?.full_name}</span>
-          <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: DEPT_COLORS[profile?.department]?.bg, color: DEPT_COLORS[profile?.department]?.text, fontWeight: 600 }}>
-            {profile?.department}
-          </span>
-          <button onClick={() => router.push('/planning')}
-            style={{ fontSize: 12, color: '#AAA', background: 'none', border: 'none', cursor: 'pointer' }}>Planning</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              width: 30, height: 30, borderRadius: '50%', background: 'rgba(255,255,255,0.1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 12, fontWeight: 700, color: '#FFB347',
+            }}>
+              {profile?.full_name?.charAt(0)}
+            </div>
+            <span style={{ fontSize: 13, color: '#CCC', fontWeight: 500 }}>{profile?.full_name}</span>
+            <span className="badge" style={{
+              fontSize: 11, padding: '4px 12px', borderRadius: 20,
+              background: DEPT_COLORS[profile?.department]?.bg,
+              color: DEPT_COLORS[profile?.department]?.text,
+              fontWeight: 700,
+            }}>
+              {profile?.department}
+            </span>
+          </div>
+          <div style={{ width: 1, height: 24, background: 'rgba(255,255,255,0.1)' }} />
+          <button className="nav-link" onClick={() => router.push('/planning')}
+            style={{ fontSize: 13, color: '#999', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, padding: '4px 0' }}>
+            Planning
+          </button>
           {isAdmin && (
-            <button onClick={() => router.push('/admin')}
-              style={{ fontSize: 12, color: '#AAA', background: 'none', border: 'none', cursor: 'pointer' }}>Utilisateurs</button>
+            <button className="nav-link" onClick={() => router.push('/admin')}
+              style={{ fontSize: 13, color: '#999', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, padding: '4px 0' }}>
+              Utilisateurs
+            </button>
           )}
-          <button onClick={handleLogout} style={{ fontSize: 12, color: '#888', background: 'none', border: 'none', cursor: 'pointer' }}>Déconnexion</button>
+          <button className="nav-link" onClick={handleLogout}
+            style={{ fontSize: 13, color: '#666', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, padding: '4px 0' }}>
+            Déconnexion
+          </button>
         </div>
-      </div>
+      </header>
 
-      <div style={{ display: 'flex', height: 'calc(100vh - 52px)', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', height: 'calc(100vh - 56px)', overflow: 'hidden' }}>
 
-        {/* LEFT PANEL */}
-        <div style={{ width: 300, borderRight: '1px solid #E8E4DC', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#F8F7F4' }}>
-          <div style={{ padding: '14px 14px 10px', borderBottom: '1px solid #E8E4DC' }}>
-            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', color: '#888', textTransform: 'uppercase', marginBottom: 8 }}>Planning 2026</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 1, marginBottom: 4 }}>
-              {MONTHS.map((m, i) => <div key={i} style={{ fontSize: 8, color: '#AAA', textAlign: 'center' }}>{m}</div>)}
+        {/* ── LEFT PANEL ──────────────────────────────────────────────── */}
+        <div style={{
+          width: 300, borderRight: '1px solid #E8E4DC', display: 'flex', flexDirection: 'column',
+          overflow: 'hidden', background: '#FFF',
+        }}>
+          {/* Mini timeline */}
+          <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid #E8E4DC', background: '#FAFAF8' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: '#AAA', textTransform: 'uppercase', marginBottom: 10 }}>
+              Planning 2026
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 1, marginBottom: 6 }}>
+              {MONTHS.map((m, i) => <div key={i} style={{ fontSize: 8, color: '#BBB', textAlign: 'center', fontWeight: 600 }}>{m}</div>)}
             </div>
             {offres.map(o => {
               const s = new Date(o.start_date).getMonth()
@@ -622,9 +693,10 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
                   onClick={() => selectOffre(o.id)}>
                   {MONTHS.map((_, i) => (
                     <div key={i} style={{
-                      height: 7, borderRadius: i === s ? '3px 0 0 3px' : i === e ? '0 3px 3px 0' : 0,
+                      height: 6, borderRadius: i === s ? '3px 0 0 3px' : i === e ? '0 3px 3px 0' : 0,
                       background: (i >= s && i <= e) ? o.color : 'transparent',
-                      opacity: selectedId === o.id ? 1 : 0.6,
+                      opacity: selectedId === o.id ? 1 : 0.5,
+                      transition: 'opacity 150ms',
                     }} />
                   ))}
                 </div>
@@ -632,75 +704,106 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
             })}
           </div>
 
+          {/* Offres list */}
           <div style={{ flex: 1, overflowY: 'auto', padding: 10 }}>
             {offres.map(o => {
               const progress = getProgress(o)
               const blocked = o.tasks?.filter(t => t.status === 'Bloqué').length || 0
+              const selected = selectedId === o.id
               return (
                 <div key={o.id} onClick={() => selectOffre(o.id)}
+                  className={selected ? '' : 'card-hover'}
                   style={{
-                    padding: '11px 13px', borderRadius: 10, marginBottom: 6, cursor: 'pointer',
-                    background: selectedId === o.id ? '#1C1B18' : '#FFF',
-                    color: selectedId === o.id ? '#F8F7F4' : '#1C1B18',
-                    border: `1px solid ${selectedId === o.id ? '#1C1B18' : '#E8E4DC'}`,
-                    transition: 'all 0.15s',
+                    padding: '13px 14px', borderRadius: 12, marginBottom: 6, cursor: 'pointer',
+                    background: selected ? '#1C1B18' : '#FFF',
+                    color: selected ? '#F8F7F4' : '#1C1B18',
+                    border: `1px solid ${selected ? '#1C1B18' : '#E8E4DC'}`,
+                    boxShadow: selected ? '0 4px 16px rgba(28,27,24,0.2)' : 'var(--shadow-sm)',
+                    transition: 'all 200ms cubic-bezier(0.4, 0, 0.2, 1)',
                   }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-                    <div style={{ width: 7, height: 7, borderRadius: '50%', background: o.color }} />
-                    <span style={{ fontSize: 12, fontWeight: 600, flex: 1 }}>{o.name}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                    <div style={{
+                      width: 8, height: 8, borderRadius: '50%', background: o.color, flexShrink: 0,
+                      boxShadow: `0 0 6px ${o.color}66`,
+                    }} />
+                    <span style={{ fontSize: 13, fontWeight: 700, flex: 1, letterSpacing: '-0.01em' }}>{o.name}</span>
+                    {o.priority === 'Haute' && (
+                      <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 4, background: selected ? 'rgba(239,68,68,0.2)' : '#FEF2F2', color: '#EF4444' }}>
+                        URGENT
+                      </span>
+                    )}
                     {isAdmin && (
                       <span onClick={ev => { ev.stopPropagation(); openEditOffre(o) }}
-                        style={{ fontSize: 12, color: selectedId === o.id ? '#888' : '#CCC', cursor: 'pointer' }}>✎</span>
+                        style={{ fontSize: 12, color: selected ? '#666' : '#CCC', cursor: 'pointer', opacity: 0.6, transition: 'opacity 150ms' }}
+                        onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+                        onMouseLeave={e => (e.currentTarget.style.opacity = '0.6')}
+                      >✎</span>
                     )}
                   </div>
-                  <div style={{ fontSize: 11, color: selectedId === o.id ? '#AAA' : '#888', marginBottom: 7 }}>
+                  <div style={{ fontSize: 11, color: selected ? '#999' : '#888', marginBottom: 8 }}>
                     {new Date(o.start_date).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' })} → {new Date(o.end_date).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' })}
                   </div>
-                  <div style={{ background: selectedId === o.id ? '#333' : '#F0EDE6', borderRadius: 4, height: 3, marginBottom: 5 }}>
-                    <div style={{ width: `${progress}%`, height: '100%', background: o.color, borderRadius: 4 }} />
+                  <div style={{ background: selected ? '#333' : '#F0EDE6', borderRadius: 100, height: 4, marginBottom: 6, overflow: 'hidden' }}>
+                    <div className="progress-bar" style={{ width: `${progress}%`, height: '100%', background: o.color, borderRadius: 100 }} />
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: selectedId === o.id ? '#AAA' : '#888' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: selected ? '#888' : '#999' }}>
                     <span>{o.tasks?.filter(t => t.status === 'Fait').length || 0}/{o.tasks?.length || 0} tâches</span>
-                    {blocked > 0 && <span style={{ color: '#EF4444' }}>⚠ {blocked}</span>}
+                    {blocked > 0 && <span style={{ color: '#EF4444', fontWeight: 700 }}>⚠ {blocked} bloquée{blocked > 1 ? 's' : ''}</span>}
+                    {!blocked && progress === 100 && <span style={{ color: '#10B981', fontWeight: 600 }}>Terminé</span>}
                   </div>
                 </div>
               )
             })}
             {isAdmin && (
               <button onClick={() => setShowNewOffre(true)} style={{
-                width: '100%', padding: '9px', border: '1.5px dashed #D4D0C8', borderRadius: 10,
-                background: 'transparent', cursor: 'pointer', fontSize: 12, color: '#888',
-              }}>+ Nouvelle offre</button>
+                width: '100%', padding: '11px', border: '2px dashed #D4D0C8', borderRadius: 12,
+                background: 'transparent', cursor: 'pointer', fontSize: 13, color: '#AAA',
+                fontWeight: 600, marginTop: 4,
+              }}>
+                + Nouvelle offre
+              </button>
             )}
           </div>
         </div>
 
-        {/* RIGHT PANEL */}
+        {/* ── RIGHT PANEL ─────────────────────────────────────────────── */}
         {offre ? (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
             {/* Header offre */}
-            <div style={{ padding: '16px 24px 12px', borderBottom: '1px solid #E8E4DC', background: '#FFF' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                <div style={{ width: 10, height: 10, borderRadius: '50%', background: offre.color }} />
-                <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{offre.name}</h1>
-                <span style={{ fontSize: 11, color: '#888', background: '#F0EDE6', padding: '3px 10px', borderRadius: 20 }}>
+            <div style={{ padding: '18px 28px 14px', borderBottom: '1px solid #E8E4DC', background: '#FFF' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                <div style={{
+                  width: 12, height: 12, borderRadius: '50%', background: offre.color,
+                  boxShadow: `0 0 8px ${offre.color}44`,
+                }} />
+                <h1 style={{ fontSize: 20, fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>{offre.name}</h1>
+                <span style={{
+                  fontSize: 11, color: '#888', background: '#F0EDE6', padding: '4px 12px', borderRadius: 20, fontWeight: 500,
+                }}>
                   {new Date(offre.start_date).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })} → {new Date(offre.end_date).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
                 </span>
-                <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: offre.priority === 'Haute' ? '#FEF2F2' : '#F1F5F9', color: offre.priority === 'Haute' ? '#EF4444' : '#888', fontWeight: 600 }}>
+                <span style={{
+                  fontSize: 11, padding: '4px 12px', borderRadius: 20, fontWeight: 700,
+                  background: offre.priority === 'Haute' ? '#FEF2F2' : '#F1F5F9',
+                  color: offre.priority === 'Haute' ? '#EF4444' : '#94A3B8',
+                }}>
                   {offre.priority}
                 </span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ flex: 1, background: '#F0EDE6', borderRadius: 4, height: 4 }}>
-                  <div style={{ width: `${getProgress(offre)}%`, height: '100%', background: offre.color, borderRadius: 4, transition: 'width 0.3s' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ flex: 1, background: '#F0EDE6', borderRadius: 100, height: 5, overflow: 'hidden' }}>
+                  <div className="progress-bar" style={{ width: `${getProgress(offre)}%`, height: '100%', background: offre.color, borderRadius: 100 }} />
                 </div>
-                <span style={{ fontSize: 11, fontWeight: 600, color: '#666' }}>{getProgress(offre)}%</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#555', minWidth: 36, textAlign: 'right' }}>{getProgress(offre)}%</span>
                 {(['Achat', 'Marketing', 'Logistique', 'ESAT'] as const).map(dept => {
                   const dt = offre.tasks?.filter(t => t.department === dept) || []
                   if (!dt.length) return null
                   return (
-                    <span key={dept} style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, background: DEPT_COLORS[dept].bg, color: DEPT_COLORS[dept].text, fontWeight: 600 }}>
+                    <span key={dept} className="badge" style={{
+                      fontSize: 10, padding: '3px 10px', borderRadius: 20,
+                      background: DEPT_COLORS[dept].bg, color: DEPT_COLORS[dept].text, fontWeight: 700,
+                    }}>
                       {dept} {dt.filter(t => t.status === 'Fait').length}/{dt.length}
                     </span>
                   )
@@ -709,36 +812,37 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
             </div>
 
             {/* ONGLETS */}
-            <div style={{ background: '#FFF', borderBottom: '1px solid #E8E4DC', padding: '0 24px', display: 'flex', alignItems: 'center', gap: 0, overflowX: 'auto' }}>
-
-              {/* Onglet Tâches */}
+            <div style={{
+              background: '#FFF', borderBottom: '1px solid #E8E4DC', padding: '0 28px',
+              display: 'flex', alignItems: 'center', gap: 0, overflowX: 'auto',
+            }}>
               <button onClick={() => setActiveTab('tasks')} style={{
-                padding: '10px 16px', fontSize: 13, fontWeight: 500, cursor: 'pointer', border: 'none', background: 'none', whiteSpace: 'nowrap',
+                padding: '12px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer', border: 'none', background: 'none', whiteSpace: 'nowrap',
                 borderBottom: activeTab === 'tasks' ? `2px solid ${offre.color}` : '2px solid transparent',
-                color: activeTab === 'tasks' ? '#1C1B18' : '#888',
+                color: activeTab === 'tasks' ? '#1C1B18' : '#999',
+                transition: 'all 150ms',
               }}>
                 Tâches {offre.tasks?.length ? `(${offre.tasks.filter(t => t.status === 'Fait').length}/${offre.tasks.length})` : ''}
               </button>
 
-              {/* Onglet Références */}
               <button onClick={() => setActiveTab('refs')} style={{
-                padding: '10px 16px', fontSize: 13, fontWeight: 500, cursor: 'pointer', border: 'none', background: 'none', whiteSpace: 'nowrap',
+                padding: '12px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer', border: 'none', background: 'none', whiteSpace: 'nowrap',
                 borderBottom: activeTab === 'refs' ? `2px solid ${offre.color}` : '2px solid transparent',
-                color: activeTab === 'refs' ? '#1C1B18' : '#888',
+                color: activeTab === 'refs' ? '#1C1B18' : '#999',
+                transition: 'all 150ms',
               }}>
                 Références {currentRefs.length > 0 ? `(${currentRefs.length})` : ''}
               </button>
 
-              {/* Séparateur */}
-              {offreComps.length > 0 && <div style={{ width: 1, height: 20, background: '#E8E4DC', margin: '0 4px' }} />}
+              {offreComps.length > 0 && <div style={{ width: 1, height: 20, background: '#E8E4DC', margin: '0 8px' }} />}
 
-              {/* Onglets composants */}
               {offreComps.map(comp => (
                 <div key={comp.id} style={{ display: 'flex', alignItems: 'center' }}>
                   <button onClick={() => setActiveTab(comp.id)} style={{
-                    padding: '10px 14px', fontSize: 13, fontWeight: 500, cursor: 'pointer', border: 'none', background: 'none', whiteSpace: 'nowrap',
+                    padding: '12px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', border: 'none', background: 'none', whiteSpace: 'nowrap',
                     borderBottom: activeTab === comp.id ? `2px solid ${offre.color}` : '2px solid transparent',
-                    color: activeTab === comp.id ? '#1C1B18' : '#888',
+                    color: activeTab === comp.id ? '#1C1B18' : '#999',
+                    transition: 'all 150ms',
                   }}>
                     {comp.name}
                   </button>
@@ -754,13 +858,13 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
                     <input autoFocus value={newComponentName} onChange={e => setNewComponentName(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && createComponent()}
                       placeholder="Nom..."
-                      style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid #E8E4DC', fontSize: 13, width: 140 }} />
-                    <button onClick={createComponent} style={{ padding: '5px 10px', borderRadius: 6, background: '#1C1B18', color: '#FFF', border: 'none', fontSize: 12, cursor: 'pointer' }}>OK</button>
-                    <button onClick={() => setShowNewComponent(false)} style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid #E8E4DC', background: 'transparent', fontSize: 12, cursor: 'pointer' }}>✕</button>
+                      style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 13, width: 140 }} />
+                    <button onClick={createComponent} style={{ padding: '6px 12px', borderRadius: 8, background: '#1C1B18', color: '#FFF', border: 'none', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>OK</button>
+                    <button onClick={() => setShowNewComponent(false)} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #E8E4DC', background: 'transparent', fontSize: 12, cursor: 'pointer' }}>✕</button>
                   </div>
                 ) : (
                   <button onClick={() => setShowNewComponent(true)} style={{
-                    padding: '8px 12px', fontSize: 12, color: '#AAA', background: 'none', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap',
+                    padding: '8px 14px', fontSize: 12, color: '#BBB', background: 'none', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', fontWeight: 600,
                   }}>+ Composant</button>
                 )
               )}
@@ -768,20 +872,24 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
 
             {/* ── ONGLET RÉFÉRENCES ── */}
             {activeTab === 'refs' && (
-              <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
 
-                {/* Toolbar */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                  <input value={refSearch} onChange={e => setRefSearch(e.target.value)}
-                    placeholder="Rechercher une référence..."
-                    style={{ flex: 1, padding: '8px 14px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 13, background: '#F8F7F4', maxWidth: 300 }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+                  <div style={{ position: 'relative', flex: 1, maxWidth: 320 }}>
+                    <input value={refSearch} onChange={e => setRefSearch(e.target.value)}
+                      placeholder="Rechercher une référence..."
+                      style={{
+                        width: '100%', padding: '9px 16px 9px 38px', borderRadius: 10,
+                        border: '1px solid #E8E4DC', fontSize: 13, background: '#FAFAF8', boxSizing: 'border-box',
+                      }} />
+                    <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#CCC' }}>⌕</span>
+                  </div>
                   <div style={{ flex: 1 }} />
-                  {/* Totaux */}
                   <div style={{ display: 'flex', gap: 8 }}>
                     {Object.entries(refsByType).map(([type, refs]) => {
                       const tc = REF_TYPE_COLORS[type] || REF_TYPE_COLORS['Autre']
                       return (
-                        <span key={type} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, background: tc.bg, color: tc.text, border: `1px solid ${tc.border}`, fontWeight: 600 }}>
+                        <span key={type} className="badge" style={{ fontSize: 11, padding: '4px 12px', borderRadius: 20, background: tc.bg, color: tc.text, border: `1px solid ${tc.border}`, fontWeight: 700 }}>
                           {type} · {refs.length}
                         </span>
                       )
@@ -789,69 +897,68 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
                   </div>
                   {isAdmin && (
                     <button onClick={() => setShowNewRef(true)} style={{
-                      padding: '8px 16px', borderRadius: 8, background: offre.color, color: '#FFF',
-                      border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                      padding: '9px 18px', borderRadius: 10, background: offre.color, color: '#FFF',
+                      border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                      boxShadow: `0 2px 8px ${offre.color}33`,
                     }}>+ Référence</button>
                   )}
                 </div>
 
-                {/* Formulaire ajout */}
                 {showNewRef && (
-                  <div style={{ background: '#FFF', border: `2px solid ${offre.color}33`, borderRadius: 12, padding: 16, marginBottom: 20 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: '#888', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Nouvelle référence</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px 120px 100px', gap: 10, alignItems: 'end' }}>
+                  <div style={{ background: '#FFF', border: `2px solid ${offre.color}33`, borderRadius: 14, padding: 20, marginBottom: 24, boxShadow: 'var(--shadow-sm)' }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#999', marginBottom: 14, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Nouvelle référence</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px 120px 100px', gap: 12, alignItems: 'end' }}>
                       <div>
-                        <label style={{ fontSize: 11, color: '#888', fontWeight: 600, display: 'block', marginBottom: 4 }}>RÉFÉRENCE *</label>
+                        <label style={labelStyle}>RÉFÉRENCE *</label>
                         <input autoFocus value={newRef.reference} onChange={e => setNewRef(p => ({ ...p, reference: e.target.value }))}
                           placeholder="DR-001-50ML"
-                          style={{ width: '100%', padding: '8px 10px', borderRadius: 7, border: '1px solid #E8E4DC', fontSize: 13, fontFamily: 'monospace', boxSizing: 'border-box' }} />
+                          style={{ ...inputStyle, fontFamily: 'monospace' }} />
                       </div>
                       <div>
-                        <label style={{ fontSize: 11, color: '#888', fontWeight: 600, display: 'block', marginBottom: 4 }}>DÉSIGNATION</label>
+                        <label style={labelStyle}>DÉSIGNATION</label>
                         <input value={newRef.label} onChange={e => setNewRef(p => ({ ...p, label: e.target.value }))}
                           placeholder="Crème Visage 50ml"
-                          style={{ width: '100%', padding: '8px 10px', borderRadius: 7, border: '1px solid #E8E4DC', fontSize: 13, boxSizing: 'border-box' }} />
+                          style={inputStyle} />
                       </div>
                       <div>
-                        <label style={{ fontSize: 11, color: '#888', fontWeight: 600, display: 'block', marginBottom: 4 }}>QTÉ</label>
+                        <label style={labelStyle}>QTÉ</label>
                         <input type="number" value={newRef.quantity} onChange={e => setNewRef(p => ({ ...p, quantity: e.target.value }))}
                           placeholder="500"
-                          style={{ width: '100%', padding: '8px 10px', borderRadius: 7, border: '1px solid #E8E4DC', fontSize: 13, boxSizing: 'border-box' }} />
+                          style={inputStyle} />
                       </div>
                       <div>
-                        <label style={{ fontSize: 11, color: '#888', fontWeight: 600, display: 'block', marginBottom: 4 }}>TYPE</label>
+                        <label style={labelStyle}>TYPE</label>
                         <select value={newRef.type} onChange={e => setNewRef(p => ({ ...p, type: e.target.value }))}
-                          style={{ width: '100%', padding: '8px 10px', borderRadius: 7, border: '1px solid #E8E4DC', fontSize: 13 }}>
+                          style={inputStyle}>
                           {REF_TYPES.map(t => <option key={t}>{t}</option>)}
                         </select>
                       </div>
                       <div>
-                        <label style={{ fontSize: 11, color: '#888', fontWeight: 600, display: 'block', marginBottom: 4 }}>UNITÉ</label>
+                        <label style={labelStyle}>UNITÉ</label>
                         <select value={newRef.unit} onChange={e => setNewRef(p => ({ ...p, unit: e.target.value }))}
-                          style={{ width: '100%', padding: '8px 10px', borderRadius: 7, border: '1px solid #E8E4DC', fontSize: 13 }}>
+                          style={inputStyle}>
                           {['unité', 'kg', 'litre', 'ml', 'g', 'boîte', 'palette'].map(u => <option key={u}>{u}</option>)}
                         </select>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', gap: 8, marginTop: 12, justifyContent: 'flex-end' }}>
+                    <div style={{ display: 'flex', gap: 8, marginTop: 14, justifyContent: 'flex-end' }}>
                       <button onClick={() => setShowNewRef(false)}
-                        style={{ padding: '7px 14px', borderRadius: 7, border: '1px solid #E8E4DC', background: 'transparent', fontSize: 13, cursor: 'pointer' }}>
+                        style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #E8E4DC', background: 'transparent', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
                         Annuler
                       </button>
                       <button onClick={addRef}
-                        style={{ padding: '7px 16px', borderRadius: 7, background: '#1C1B18', color: '#FFF', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                        style={{ padding: '8px 18px', borderRadius: 10, background: '#1C1B18', color: '#FFF', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                         Ajouter
                       </button>
                     </div>
                   </div>
                 )}
 
-                {/* Références groupées par type */}
                 {filteredRefs.length === 0 && !showNewRef && (
-                  <div style={{ textAlign: 'center', padding: '40px 0', color: '#AAA' }}>
-                    <div style={{ fontSize: 32, marginBottom: 10 }}>📦</div>
-                    <div style={{ fontSize: 14 }}>Aucune référence pour cette offre</div>
-                    {isAdmin && <div style={{ fontSize: 12, marginTop: 6 }}>Clique sur "+ Référence" pour en ajouter</div>}
+                  <div className="empty-state" style={{ textAlign: 'center', padding: '60px 0', color: '#BBB' }}>
+                    <div style={{ fontSize: 40, marginBottom: 12, opacity: 0.5 }}>📦</div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: '#999' }}>Aucune référence pour cette offre</div>
+                    {isAdmin && <div style={{ fontSize: 13, marginTop: 8, color: '#CCC' }}>Clique sur &quot;+ Référence&quot; pour en ajouter</div>}
                   </div>
                 )}
 
@@ -859,22 +966,25 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
                   const tc = REF_TYPE_COLORS[type] || REF_TYPE_COLORS['Autre']
                   const totalQty = refs.reduce((acc, r) => acc + r.quantity, 0)
                   return (
-                    <div key={type} style={{ marginBottom: 20 }}>
-                      {/* Header groupe */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                        <span style={{ fontSize: 12, fontWeight: 700, padding: '4px 12px', borderRadius: 20, background: tc.bg, color: tc.text, border: `1px solid ${tc.border}` }}>
+                    <div key={type} style={{ marginBottom: 24 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                        <span style={{ fontSize: 12, fontWeight: 800, padding: '4px 14px', borderRadius: 20, background: tc.bg, color: tc.text, border: `1px solid ${tc.border}` }}>
                           {type}
                         </span>
-                        <span style={{ fontSize: 11, color: '#AAA' }}>{refs.length} référence{refs.length > 1 ? 's' : ''}</span>
+                        <span style={{ fontSize: 11, color: '#BBB', fontWeight: 500 }}>{refs.length} référence{refs.length > 1 ? 's' : ''}</span>
                         <div style={{ flex: 1, height: 1, background: '#E8E4DC' }} />
-                        <span style={{ fontSize: 11, color: '#888', fontWeight: 600 }}>
+                        <span style={{ fontSize: 11, color: '#888', fontWeight: 700 }}>
                           Total : {totalQty.toLocaleString()} {refs[0]?.unit || 'unités'}
                         </span>
                       </div>
 
-                      {/* Table refs */}
-                      <div style={{ background: '#FFF', borderRadius: 12, border: '1px solid #E8E4DC', overflow: 'hidden' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr 100px 80px 40px', padding: '8px 16px', fontSize: 10, color: '#AAA', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: '1px solid #F0EDE6', background: '#FAFAF8' }}>
+                      <div style={{ background: '#FFF', borderRadius: 14, border: '1px solid #E8E4DC', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
+                        <div style={{
+                          display: 'grid', gridTemplateColumns: '160px 1fr 100px 80px 40px',
+                          padding: '10px 18px', fontSize: 10, color: '#AAA', fontWeight: 700,
+                          textTransform: 'uppercase', letterSpacing: '0.08em',
+                          borderBottom: '1px solid #F0EDE6', background: '#FAFAF8',
+                        }}>
                           <div>Référence</div>
                           <div>Désignation</div>
                           <div>Quantité</div>
@@ -883,22 +993,19 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
                         </div>
                         {refs.map((ref, idx) => (
                           <div key={ref.id}
+                            className="row-hover"
                             onClick={() => isAdmin && setEditingRef(ref)}
                             style={{
                               display: 'grid', gridTemplateColumns: '160px 1fr 100px 80px 40px',
-                              padding: '10px 16px', alignItems: 'center',
+                              padding: '12px 18px', alignItems: 'center',
                               borderBottom: idx < refs.length - 1 ? '1px solid #F8F7F4' : 'none',
                               cursor: isAdmin ? 'pointer' : 'default',
-                              transition: 'background 0.1s',
-                            }}
-                            onMouseEnter={e => isAdmin && ((e.currentTarget as HTMLElement).style.background = '#F8F7F4')}
-                            onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
-                          >
+                            }}>
                             <div style={{ fontSize: 13, fontWeight: 700, color: tc.text, fontFamily: 'monospace', letterSpacing: '0.02em' }}>
                               {ref.reference}
                             </div>
                             <div style={{ fontSize: 13, color: '#444' }}>{ref.label || <span style={{ color: '#CCC' }}>—</span>}</div>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: '#1C1B18' }}>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: '#1C1B18' }}>
                               {ref.quantity.toLocaleString()}
                             </div>
                             <div style={{ fontSize: 12, color: '#888' }}>{ref.unit}</div>
@@ -918,12 +1025,11 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
             {activeTab !== 'refs' && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
-                {/* Refs composant si onglet composant actif */}
                 {activeComp && (activeComp.refs || []).length > 0 && (
-                  <div style={{ padding: '10px 24px', borderBottom: '1px solid #E8E4DC', background: '#FAFAF8' }}>
+                  <div style={{ padding: '10px 28px', borderBottom: '1px solid #E8E4DC', background: '#FAFAF8' }}>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       {(activeComp.refs || []).map((ref: any) => (
-                        <span key={ref.id} style={{ fontSize: 11, fontFamily: 'monospace', fontWeight: 600, padding: '3px 10px', borderRadius: 20, background: '#F0EDE6', color: '#666', border: '1px solid #E8E4DC' }}>
+                        <span key={ref.id} style={{ fontSize: 11, fontFamily: 'monospace', fontWeight: 700, padding: '4px 12px', borderRadius: 20, background: '#F0EDE6', color: '#666', border: '1px solid #E8E4DC' }}>
                           {ref.reference} · {ref.quantity.toLocaleString()}
                         </span>
                       ))}
@@ -932,48 +1038,63 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
                 )}
 
                 {/* Filtres */}
-                <div style={{ padding: '10px 24px', borderBottom: '1px solid #E8E4DC', background: '#FFF', display: 'flex', gap: 6, alignItems: 'center' }}>
+                <div style={{ padding: '12px 28px', borderBottom: '1px solid #E8E4DC', background: '#FFF', display: 'flex', gap: 6, alignItems: 'center' }}>
                   {['Tous', 'Achat', 'Marketing', 'Logistique', 'ESAT'].map(d => (
-                    <button key={d} onClick={() => setFilterDept(d)} style={{
-                      padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 500, cursor: 'pointer',
-                      border: filterDept === d ? 'none' : '1px solid #E8E4DC',
-                      background: filterDept === d ? '#1C1B18' : 'transparent',
-                      color: filterDept === d ? '#F8F7F4' : '#666',
-                    }}>{d}</button>
+                    <button key={d} onClick={() => setFilterDept(d)}
+                      className={`filter-pill ${filterDept === d ? 'filter-pill-active' : ''}`}
+                      style={{
+                        padding: '5px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                        border: filterDept === d ? 'none' : '1px solid #E8E4DC',
+                        background: filterDept === d ? '#1C1B18' : 'transparent',
+                        color: filterDept === d ? '#F8F7F4' : '#777',
+                      }}>{d}</button>
                   ))}
                   <div style={{ flex: 1 }} />
                   {isAdmin && (
                     <button onClick={() => setShowNewTask(true)} style={{
-                      padding: '5px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                      padding: '6px 16px', borderRadius: 10, fontSize: 12, fontWeight: 700,
                       background: offre.color, color: '#FFF', border: 'none', cursor: 'pointer',
+                      boxShadow: `0 2px 8px ${offre.color}33`,
                     }}>+ Tâche</button>
                   )}
                 </div>
 
-                <div style={{ flex: 1, overflowY: 'auto', padding: '8px 24px 24px' }}>
+                <div style={{ flex: 1, overflowY: 'auto', padding: '10px 28px 28px' }}>
 
                   {showNewTask && (
-                    <div style={{ background: '#FFF', border: '1px solid #E8E4DC', borderRadius: 10, padding: 12, marginBottom: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <div style={{
+                      background: '#FFF', border: '1px solid #E8E4DC', borderRadius: 12,
+                      padding: 14, marginBottom: 14, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center',
+                      boxShadow: 'var(--shadow-sm)',
+                    }}>
                       <input value={newTask.label} onChange={e => setNewTask(p => ({ ...p, label: e.target.value }))}
-                        placeholder="Nom de la tâche..."
-                        style={{ flex: 2, padding: '7px 10px', borderRadius: 7, border: '1px solid #E8E4DC', fontSize: 13, minWidth: 130 }} />
+                        placeholder="Nom de la tâche..." autoFocus
+                        style={{ flex: 2, padding: '8px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 13, minWidth: 130 }} />
                       <select value={newTask.dept} onChange={e => setNewTask(p => ({ ...p, dept: e.target.value }))}
-                        style={{ padding: '7px 10px', borderRadius: 7, border: '1px solid #E8E4DC', fontSize: 13 }}>
+                        style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 13 }}>
                         {['Achat', 'Marketing', 'Logistique', 'ESAT'].map(d => <option key={d}>{d}</option>)}
                       </select>
                       <input value={newTask.deadline} onChange={e => setNewTask(p => ({ ...p, deadline: e.target.value }))} type="date"
-                        style={{ padding: '7px 10px', borderRadius: 7, border: '1px solid #E8E4DC', fontSize: 13 }} />
-                      <button onClick={() => addTask(activeComp?.id)} style={{ padding: '7px 14px', borderRadius: 7, background: '#1C1B18', color: '#FFF', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Ajouter</button>
-                      <button onClick={() => setShowNewTask(false)} style={{ padding: '7px', borderRadius: 7, border: '1px solid #E8E4DC', background: 'transparent', fontSize: 13, cursor: 'pointer', color: '#888' }}>✕</button>
+                        style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #E8E4DC', fontSize: 13 }} />
+                      <button onClick={() => addTask(activeComp?.id)} style={{ padding: '8px 16px', borderRadius: 8, background: '#1C1B18', color: '#FFF', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Ajouter</button>
+                      <button onClick={() => setShowNewTask(false)} style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #E8E4DC', background: 'transparent', fontSize: 13, cursor: 'pointer', color: '#888' }}>✕</button>
                     </div>
                   )}
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '28px 1fr 110px 100px 120px 1fr 32px', padding: '6px 14px', fontSize: 10, color: '#AAA', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                  {/* Table header */}
+                  <div className="table-header" style={{
+                    display: 'grid', gridTemplateColumns: '28px 1fr 110px 100px 120px 1fr 32px',
+                    padding: '8px 16px', fontSize: 10, color: '#AAA', fontWeight: 700,
+                    letterSpacing: '0.08em', textTransform: 'uppercase',
+                    background: 'rgba(248,247,244,0.9)', borderRadius: '8px 8px 0 0',
+                  }}>
                     <div/><div>Tâche</div><div>Département</div><div>Deadline</div><div>Statut</div><div>Note</div><div/>
                   </div>
 
                   {tasksToShow.length === 0 && (
-                    <div style={{ fontSize: 13, color: '#CCC', padding: '20px 14px' }}>Aucune tâche</div>
+                    <div className="empty-state" style={{ fontSize: 14, color: '#CCC', padding: '30px 16px', textAlign: 'center' }}>
+                      Aucune tâche
+                    </div>
                   )}
 
                   {tasksToShow.map((task, idx) => {
@@ -981,37 +1102,43 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
                     const sc = STATUS_CONFIG[task.status]
                     const canEdit = isAdmin || task.department === profile?.department
                     return (
-                      <div key={task.id} style={{
+                      <div key={task.id} className="row-hover" style={{
                         display: 'grid', gridTemplateColumns: '28px 1fr 110px 100px 120px 1fr 32px',
-                        padding: '9px 14px', borderRadius: 7, alignItems: 'center',
-                        background: idx % 2 === 0 ? '#FFF' : 'transparent', marginBottom: 2,
+                        padding: '10px 16px', borderRadius: 8, alignItems: 'center',
+                        background: idx % 2 === 0 ? '#FFF' : 'transparent', marginBottom: 1,
                       }}>
                         <div onClick={() => canEdit && updateTaskStatus(task.id, task.status === 'Fait' ? 'À faire' : 'Fait', activeComp?.id)}
                           style={{
-                            width: 16, height: 16, borderRadius: 4,
-                            border: task.status === 'Fait' ? 'none' : '1.5px solid #D4D0C8',
+                            width: 18, height: 18, borderRadius: 5,
+                            border: task.status === 'Fait' ? 'none' : '2px solid #D4D0C8',
                             background: task.status === 'Fait' ? '#10B981' : 'transparent',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            cursor: canEdit ? 'pointer' : 'default', fontSize: 10, color: '#FFF',
+                            cursor: canEdit ? 'pointer' : 'default', fontSize: 11, color: '#FFF',
+                            transition: 'all 150ms',
+                            boxShadow: task.status === 'Fait' ? '0 2px 4px rgba(16,185,129,0.3)' : 'none',
                           }}>
                           {task.status === 'Fait' && '✓'}
                         </div>
-                        <div style={{ fontSize: 13, fontWeight: task.status === 'Fait' ? 400 : 500, color: task.status === 'Fait' ? '#AAA' : '#1C1B18', textDecoration: task.status === 'Fait' ? 'line-through' : 'none' }}>
+                        <div style={{ fontSize: 13, fontWeight: task.status === 'Fait' ? 400 : 600, color: task.status === 'Fait' ? '#BBB' : '#1C1B18', textDecoration: task.status === 'Fait' ? 'line-through' : 'none' }}>
                           {task.label}
-                          {task.is_custom && <span style={{ fontSize: 10, color: '#AAA', marginLeft: 6 }}>custom</span>}
+                          {task.is_custom && <span style={{ fontSize: 10, color: '#CCC', marginLeft: 6, fontWeight: 500 }}>custom</span>}
                         </div>
-                        <div><span style={{ fontSize: 11, fontWeight: 600, color: dc.text, background: dc.bg, padding: '2px 8px', borderRadius: 20 }}>{task.department}</span></div>
-                        <div style={{ fontSize: 12, color: '#888' }}>
+                        <div>
+                          <span className="badge" style={{ fontSize: 11, fontWeight: 700, color: dc.text, background: dc.bg, padding: '3px 10px', borderRadius: 20 }}>
+                            {task.department}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 12, color: '#888', fontWeight: 500 }}>
                           {task.deadline ? new Date(task.deadline).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : '—'}
                         </div>
                         <div>
                           {canEdit ? (
                             <select value={task.status} onChange={e => updateTaskStatus(task.id, e.target.value, activeComp?.id)}
-                              style={{ fontSize: 11, fontWeight: 600, padding: '2px 7px', borderRadius: 6, border: 'none', background: sc.bg, color: sc.color, cursor: 'pointer' }}>
+                              style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 8, border: 'none', background: sc.bg, color: sc.color, cursor: 'pointer' }}>
                               {['À faire', 'En cours', 'Fait', 'Bloqué'].map(s => <option key={s}>{s}</option>)}
                             </select>
                           ) : (
-                            <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 7px', borderRadius: 6, background: sc.bg, color: sc.color }}>{task.status}</span>
+                            <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 8, background: sc.bg, color: sc.color }}>{task.status}</span>
                           )}
                         </div>
                         <div>
@@ -1019,7 +1146,7 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
                             <input autoFocus defaultValue={task.note}
                               onBlur={e => updateNote(task.id, e.target.value, activeComp?.id)}
                               onKeyDown={e => e.key === 'Enter' && updateNote(task.id, (e.target as HTMLInputElement).value, activeComp?.id)}
-                              style={{ fontSize: 12, padding: '2px 8px', borderRadius: 5, border: '1px solid #E8E4DC', width: '100%' }} />
+                              style={{ fontSize: 12, padding: '3px 10px', borderRadius: 7, border: '1px solid #E8E4DC', width: '100%' }} />
                           ) : (
                             <div onClick={() => canEdit && setEditingNote(task.id)}
                               style={{ fontSize: 12, color: task.note ? '#555' : '#CCC', cursor: canEdit ? 'text' : 'default', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
@@ -1030,7 +1157,10 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
                         <div>
                           {isAdmin && (
                             <span onClick={() => openEditTask(task)}
-                              style={{ fontSize: 13, color: '#CCC', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✎</span>
+                              style={{ fontSize: 13, color: '#CCC', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5, transition: 'opacity 150ms' }}
+                              onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+                              onMouseLeave={e => (e.currentTarget.style.opacity = '0.5')}
+                            >✎</span>
                           )}
                         </div>
                       </div>
@@ -1041,9 +1171,10 @@ export default function DashboardClient({ profile, offres: initialOffres }: { pr
             )}
           </div>
         ) : (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 10, color: '#AAA' }}>
-            <div style={{ fontSize: 36 }}>✦</div>
-            <div style={{ fontSize: 16, color: '#888' }}>Sélectionne une offre</div>
+          <div className="empty-state" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12, color: '#CCC' }}>
+            <div style={{ fontSize: 44, opacity: 0.3 }}>✦</div>
+            <div style={{ fontSize: 16, color: '#AAA', fontWeight: 600 }}>Sélectionne une offre</div>
+            <div style={{ fontSize: 13, color: '#CCC' }}>pour voir les détails et les tâches</div>
           </div>
         )}
       </div>
